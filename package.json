@@ -1,0 +1,43 @@
+{
+  "name": "pharmacalc",
+  "version": "1.0.0",
+  "description": "PharmCalc - Pharmacy Grade Calculator",
+  "main": "main.js",
+  "author": "Said",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win",
+    "dev": "electron . --dev"
+  },
+  "devDependencies": {
+    "electron": "^latest",
+    "electron-builder": "^latest"
+  },
+  "build": {
+    "appId": "com.pharmacalc.app",
+    "productName": "PharmCalc",
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "js/**/*",
+      "styles/**/*",
+      "manifest.json",
+      "service-worker.js",
+      "*.md"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
