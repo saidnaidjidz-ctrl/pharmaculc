@@ -3,7 +3,7 @@
 class Page2 {
     static subjectConfigs = {
         'Organic': { coef: 3, type: 'exams', count: 2 },
-        'Cell Biology': { coef: 3, type: 'tests', count: 3 },
+        'Cell Biology': { coef: 3, type: 'tests', count: 3, hasTP: true },
         'Plant Biology': { coef: 2, type: 'tests', count: 2, hasTP: true },
         'Biostatistics': { coef: 1.5, type: 'single' },
         'Informatics': { coef: 1.5, type: 'single' },
@@ -179,10 +179,14 @@ class Page2 {
             });
         }
 
-        // Auto-save on input change
+        // Auto-save and auto-calculate on input change
         const inputs = document.querySelectorAll('#page2-form input');
         inputs.forEach(input => {
-            input.addEventListener('change', () => this.saveData());
+            input.addEventListener('change', () => {
+                this.saveData();
+                // Auto-calculate after a short delay to ensure data is saved
+                setTimeout(() => this.calculate(), 100);
+            });
         });
     }
 

@@ -137,7 +137,4 @@ class Page1 {
     }
 }
 
-// Initialize Page 1 when DOM is ready
-//document.addEventListener('DOMContentLoaded', () => {
-//    setTimeout(() => Page1.init(), 100);
-//});
+// Page 1 has been removed from the application

@@ -43,7 +43,7 @@ class GradeCalculator {
     static calculateAdvancedStructured(data) {
         const subjectConfigs = {
             'Organic': { coef: 3, exams: 2 },
-            'Cell Biology': { coef: 3, tests: 3 },
+            'Cell Biology': { coef: 3, tests: 3, hasTP: true },
             'Plant Biology': { coef: 2, tests: 2, hasTP: true },
             'Biostatistics': { coef: 1.5 },
             'Informatics': { coef: 1.5 },

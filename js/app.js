@@ -1,13 +1,13 @@
 /* ==================== APP.JS - MAIN APPLICATION LOGIC ==================== */
 
 class App {
-    static currentPage = 'page1';
+    static currentPage = 'page2';
 
     static init() {
         this.initTheme();
         this.attachNavigation();
         this.attachGlobalHandlers();
-        this.showPage('page1');
+        this.showPage('page2');
     }
 
     static initTheme() {
