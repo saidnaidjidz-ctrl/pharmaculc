@@ -185,22 +185,35 @@ class Page2 {
         const savedData = storage.getPage2Data();
         if (!savedData || Object.keys(savedData).length === 0) return;
 
+        // Restore form values
         const inputs = document.querySelectorAll('#page2-form input');
         inputs.forEach(input => {
             const key = input.name;
-            if (input.type === 'checkbox') {
-                // Load toggle state
-                input.checked = savedData[key] === true || savedData[key] === 'true';
-                // Show/hide TP field based on toggle state
-                if (input.classList.contains('tp-toggle')) {
-                    const subject = input.dataset.subject;
-                    const tpGroup = document.getElementById(`${subject}tpGroup`);
-                    if (tpGroup) {
-                        tpGroup.style.display = input.checked ? 'block' : 'none';
+            
+            // Find which subject this input belongs to
+            let subjectKey = null;
+            for (const subject of Object.keys(this.subjectConfigs)) {
+                const normKey = subject.toLowerCase().replace(/\s+/g, '');
+                if (key.startsWith(normKey)) {
+                    subjectKey = normKey;
+                    const fieldName = key.substring(normKey.length);
+                    
+                    if (input.type === 'checkbox') {
+                        // Load toggle state
+                        input.checked = savedData[key] === true || savedData[key] === 'true';
+                        // Show/hide TP field based on toggle state
+                        if (input.classList.contains('tp-toggle')) {
+                            const subject = input.dataset.subject;
+                            const tpGroup = document.getElementById(`${subject}tpGroup`);
+                            if (tpGroup) {
+                                tpGroup.style.display = input.checked ? 'block' : 'none';
+                            }
+                        }
+                    } else if (savedData[key] !== undefined) {
+                        input.value = savedData[key];
                     }
+                    break;
                 }
-            } else if (savedData[key]) {
-                input.value = savedData[key];
             }
         });
 
@@ -273,7 +286,15 @@ class Page2 {
     }
 
     static saveData() {
-        const formData = UIUtils.getFormData('#page2-form');
+        const inputs = document.querySelectorAll('#page2-form input');
+        const formData = {};
+        
+        inputs.forEach(input => {
+            if (input.value || input.type === 'checkbox') {
+                formData[input.name] = input.type === 'checkbox' ? input.checked : input.value;
+            }
+        });
+        
         storage.setPage2Data(formData);
     }
 
@@ -283,11 +304,28 @@ class Page2 {
         const formData = {};
         let hasData = false;
 
-        // Collect data from all numeric inputs
+        // Collect data from all numeric inputs and structure them properly
         inputs.forEach(input => {
             if (input.value && !isNaN(input.value)) {
-                formData[input.name] = parseFloat(input.value);
-                hasData = true;
+                const name = input.name;
+                
+                // Find which subject this input belongs to
+                let subjectKey = null;
+                for (const subject of Object.keys(this.subjectConfigs)) {
+                    const key = subject.toLowerCase().replace(/\s+/g, '');
+                    if (name.startsWith(key)) {
+                        subjectKey = key;
+                        // Extract the field type (exam1, test1, tp, grade)
+                        const fieldName = name.substring(key.length);
+                        
+                        if (!formData[subjectKey]) {
+                            formData[subjectKey] = {};
+                        }
+                        formData[subjectKey][fieldName] = parseFloat(input.value);
+                        hasData = true;
+                        break;
+                    }
+                }
             }
         });
 

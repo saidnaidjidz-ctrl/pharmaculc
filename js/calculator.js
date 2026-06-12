@@ -43,7 +43,7 @@ class GradeCalculator {
     static calculateAdvancedStructured(data) {
         const subjectConfigs = {
             'Organic': { coef: 3, exams: 2 },
-            'Cell Biology': { coef: 3, tests: 3, hasTP: true },
+            'Cell Biology': { coef: 3, tests: 3, tpToggleable: true },
             'Plant Biology': { coef: 2, tests: 2, hasTP: true },
             'Biostatistics': { coef: 1.5 },
             'Informatics': { coef: 1.5 },
@@ -95,8 +95,8 @@ class GradeCalculator {
                 }
             }
 
-            // Add TP/TD if applicable
-            if (config.hasTP) {
+            // Add TP if applicable
+            if ((config.hasTP || config.tpToggleable) && hasData) {
                 const tp = parseFloat(subjectData.tp) || null;
                 if (tp !== null && tp >= 0) {
                     subjectAverage = (4 * subjectAverage + tp) / 5;
