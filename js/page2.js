@@ -85,27 +85,50 @@ class Page2 {
                     inputsDiv.appendChild(group);
                 }
 
-                // Add TP if this subject has it
+                // Add TP toggle if this subject has it
                 if (config.hasTP) {
-                    const group = document.createElement('div');
-                    group.className = 'form-group';
+                    // Add toggle button
+                    const toggleGroup = document.createElement('div');
+                    toggleGroup.className = 'form-group checkbox';
 
-                    const label = document.createElement('label');
-                    label.className = 'input-label';
-                    label.textContent = 'TP/TD';
+                    const toggleInput = document.createElement('input');
+                    toggleInput.type = 'checkbox';
+                    toggleInput.id = `${key}tpToggle`;
+                    toggleInput.name = `${key}tpToggle`;
+                    toggleInput.className = 'tp-toggle';
+                    toggleInput.dataset.subject = key;
 
-                    const input = document.createElement('input');
-                    input.type = 'number';
-                    input.min = '0';
-                    input.max = '20';
-                    input.step = '0.5';
-                    input.placeholder = '0-20';
-                    input.name = `${key}tp`;
-                    input.value = '';
+                    const toggleLabel = document.createElement('label');
+                    toggleLabel.htmlFor = `${key}tpToggle`;
+                    toggleLabel.textContent = 'Include TP Grade';
 
-                    group.appendChild(label);
-                    group.appendChild(input);
-                    inputsDiv.appendChild(group);
+                    toggleGroup.appendChild(toggleInput);
+                    toggleGroup.appendChild(toggleLabel);
+                    inputsDiv.appendChild(toggleGroup);
+
+                    // Add TP input field (hidden by default)
+                    const tpGroup = document.createElement('div');
+                    tpGroup.className = 'form-group tp-input-group';
+                    tpGroup.id = `${key}tpGroup`;
+                    tpGroup.style.display = 'none';
+
+                    const tpLabel = document.createElement('label');
+                    tpLabel.className = 'input-label';
+                    tpLabel.textContent = 'TP Grade';
+
+                    const tpInput = document.createElement('input');
+                    tpInput.type = 'number';
+                    tpInput.min = '0';
+                    tpInput.max = '20';
+                    tpInput.step = '0.5';
+                    tpInput.placeholder = '0-20';
+                    tpInput.name = `${key}tp`;
+                    tpInput.value = '';
+                    tpInput.className = 'tp-input';
+
+                    tpGroup.appendChild(tpLabel);
+                    tpGroup.appendChild(tpInput);
+                    inputsDiv.appendChild(tpGroup);
                 }
             } else if (config.type === 'single') {
                 const group = document.createElement('div');
@@ -142,7 +165,18 @@ class Page2 {
         const inputs = document.querySelectorAll('#page2-form input');
         inputs.forEach(input => {
             const key = input.name;
-            if (savedData[key]) {
+            if (input.type === 'checkbox') {
+                // Load toggle state
+                input.checked = savedData[key] === true || savedData[key] === 'true';
+                // Show/hide TP field based on toggle state
+                if (input.classList.contains('tp-toggle')) {
+                    const subject = input.dataset.subject;
+                    const tpGroup = document.getElementById(`${subject}tpGroup`);
+                    if (tpGroup) {
+                        tpGroup.style.display = input.checked ? 'block' : 'none';
+                    }
+                }
+            } else if (savedData[key]) {
                 input.value = savedData[key];
             }
         });
@@ -179,8 +213,33 @@ class Page2 {
             });
         }
 
+        // Handle TP toggle changes
+        const tpToggles = document.querySelectorAll('.tp-toggle');
+        tpToggles.forEach(toggle => {
+            toggle.addEventListener('change', (e) => {
+                const subject = toggle.dataset.subject;
+                const tpGroup = document.getElementById(`${subject}tpGroup`);
+                
+                // Show or hide TP input field
+                if (tpGroup) {
+                    tpGroup.style.display = toggle.checked ? 'block' : 'none';
+                    // Clear TP value when toggling off
+                    if (!toggle.checked) {
+                        const tpInput = tpGroup.querySelector('.tp-input');
+                        if (tpInput) {
+                            tpInput.value = '';
+                        }
+                    }
+                }
+                
+                // Save and recalculate
+                this.saveData();
+                setTimeout(() => this.calculate(), 100);
+            });
+        });
+
         // Auto-save and auto-calculate on input change
-        const inputs = document.querySelectorAll('#page2-form input');
+        const inputs = document.querySelectorAll('#page2-form input:not(.tp-toggle)');
         inputs.forEach(input => {
             input.addEventListener('change', () => {
                 this.saveData();
@@ -196,12 +255,12 @@ class Page2 {
     }
 
     static calculate() {
-        // Get all input values
-        const inputs = document.querySelectorAll('#page2-form input');
+        // Get all input values (excluding checkboxes)
+        const inputs = document.querySelectorAll('#page2-form input:not([type="checkbox"])');
         const formData = {};
         let hasData = false;
 
-        // Collect data from all inputs
+        // Collect data from all numeric inputs
         inputs.forEach(input => {
             if (input.value && !isNaN(input.value)) {
                 formData[input.name] = parseFloat(input.value);
