@@ -99,7 +99,7 @@ class GradeCalculator {
             if (config.hasTP) {
                 const tp = parseFloat(subjectData.tp) || null;
                 if (tp !== null && tp > 0) {
-                    subjectAverage = (subjectAverage + tp) / 2;
+                    subjectAverage = (4 * subjectAverage + tp) / 5;
                     hasData = true;
                 }
             }
@@ -151,7 +151,7 @@ class GradeCalculator {
                 const tpGrade = parseFloat(tp) || null;
                 if (tpGrade !== null && tpGrade >= 0 && tpGrade <= 20) {
                     if (hasData) {
-                        subjectAverage = (subjectAverage + tpGrade) / 2;
+                        subjectAverage = (4 * subjectAverage + tpGrade) / 5;
                     } else {
                         subjectAverage = tpGrade;
                     }
