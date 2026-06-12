@@ -3,7 +3,7 @@
 class Page2 {
     static subjectConfigs = {
         'Organic': { coef: 3, type: 'exams', count: 2 },
-        'Cell Biology': { coef: 3, type: 'tests', count: 3, hasTP: true },
+        'Cell Biology': { coef: 3, type: 'tests', count: 3, tpToggleable: true },
         'Plant Biology': { coef: 2, type: 'tests', count: 2, hasTP: true },
         'Biostatistics': { coef: 1.5, type: 'single' },
         'Informatics': { coef: 1.5, type: 'single' },
@@ -85,8 +85,8 @@ class Page2 {
                     inputsDiv.appendChild(group);
                 }
 
-                // Add TP toggle if this subject has it
-                if (config.hasTP) {
+                // Add TP toggle if this subject has toggleable TP
+                if (config.tpToggleable) {
                     // Add toggle button
                     const toggleGroup = document.createElement('div');
                     toggleGroup.className = 'form-group checkbox';
@@ -129,6 +129,29 @@ class Page2 {
                     tpGroup.appendChild(tpLabel);
                     tpGroup.appendChild(tpInput);
                     inputsDiv.appendChild(tpGroup);
+                }
+
+                // Add mandatory TP if this subject has it
+                if (config.hasTP) {
+                    const group = document.createElement('div');
+                    group.className = 'form-group';
+
+                    const label = document.createElement('label');
+                    label.className = 'input-label';
+                    label.textContent = 'TP Grade';
+
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.min = '0';
+                    input.max = '20';
+                    input.step = '0.5';
+                    input.placeholder = '0-20';
+                    input.name = `${key}tp`;
+                    input.value = '';
+
+                    group.appendChild(label);
+                    group.appendChild(input);
+                    inputsDiv.appendChild(group);
                 }
             } else if (config.type === 'single') {
                 const group = document.createElement('div');
