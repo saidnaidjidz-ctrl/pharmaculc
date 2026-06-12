@@ -49,6 +49,7 @@ class GradeCalculator {
             'Informatics': { coef: 1.5 },
             'Anatomy': { coef: 1 },
             'Physiology': { coef: 1 },
+            'Physics': { coef: 2, tests: 1 },
             'English': { coef: 1 }
         };
 

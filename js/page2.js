@@ -9,6 +9,7 @@ class Page2 {
         'Informatics': { coef: 1.5, type: 'single' },
         'Anatomy': { coef: 1, type: 'single' },
         'Physiology': { coef: 1, type: 'single' },
+        'Physics': { coef: 2, type: 'tests', count: 1 },
         'English': { coef: 1, type: 'single' }
     };
 
