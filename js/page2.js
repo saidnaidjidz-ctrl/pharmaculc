@@ -53,7 +53,7 @@ class Page2 {
                     input.type = 'number';
                     input.min = '0';
                     input.max = '20';
-                    input.step = '0.5';
+                    input.step = 'any';
                     input.placeholder = '0-20';
                     input.name = `${key}exam${i}`;
                     input.value = '';
@@ -75,7 +75,7 @@ class Page2 {
                     input.type = 'number';
                     input.min = '0';
                     input.max = '20';
-                    input.step = '0.5';
+                    input.step = 'any';
                     input.placeholder = '0-20';
                     input.name = `${key}test${i}`;
                     input.value = '';
@@ -120,7 +120,7 @@ class Page2 {
                     tpInput.type = 'number';
                     tpInput.min = '0';
                     tpInput.max = '20';
-                    tpInput.step = '0.5';
+                    tpInput.step = 'any';
                     tpInput.placeholder = '0-20';
                     tpInput.name = `${key}tp`;
                     tpInput.value = '';
@@ -144,7 +144,7 @@ class Page2 {
                     input.type = 'number';
                     input.min = '0';
                     input.max = '20';
-                    input.step = '0.5';
+                    input.step = 'any';
                     input.placeholder = '0-20';
                     input.name = `${key}tp`;
                     input.value = '';
@@ -165,7 +165,7 @@ class Page2 {
                 input.type = 'number';
                 input.min = '0';
                 input.max = '20';
-                input.step = '0.5';
+                input.step = 'any';
                 input.placeholder = '0-20';
                 input.name = `${key}grade`;
                 input.value = '';

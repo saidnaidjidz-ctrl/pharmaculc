@@ -99,7 +99,7 @@ class UIUtils {
         input.type = 'number';
         input.min = '0';
         input.max = '20';
-        input.step = '0.5';
+        input.step = 'any';
         input.placeholder = placeholder || 'Enter grade (0-20)';
         input.name = subject.toLowerCase().replace(/\s+/g, '');
         input.value = '';
@@ -162,7 +162,7 @@ class UIUtils {
                 input.type = 'number';
                 input.min = '0';
                 input.max = '20';
-                input.step = '0.5';
+                input.step = 'any';
                 input.placeholder = '0-20';
                 input.value = exam || '';
                 input.className = 'exam-input';
@@ -189,7 +189,7 @@ class UIUtils {
             input.type = 'number';
             input.min = '0';
             input.max = '20';
-            input.step = '0.5';
+            input.step = 'any';
             input.placeholder = '0-20';
             input.value = subject.tp || '';
             input.className = 'tp-input';

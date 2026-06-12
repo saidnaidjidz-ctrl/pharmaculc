@@ -67,7 +67,7 @@ class GradeCalculator {
                 const exams = [];
                 for (let i = 1; i <= config.exams; i++) {
                     const grade = parseFloat(subjectData[`exam${i}`]) || null;
-                    if (grade !== null && grade > 0) {
+                    if (grade !== null && grade >= 0) {
                         exams.push(grade);
                         hasData = true;
                     }
@@ -79,7 +79,7 @@ class GradeCalculator {
                 const tests = [];
                 for (let i = 1; i <= config.tests; i++) {
                     const grade = parseFloat(subjectData[`test${i}`]) || null;
-                    if (grade !== null && grade > 0) {
+                    if (grade !== null && grade >= 0) {
                         tests.push(grade);
                         hasData = true;
                     }
@@ -89,7 +89,7 @@ class GradeCalculator {
                 }
             } else {
                 const grade = parseFloat(subjectData.grade) || null;
-                if (grade !== null && grade > 0) {
+                if (grade !== null && grade >= 0) {
                     subjectAverage = grade;
                     hasData = true;
                 }
@@ -98,13 +98,13 @@ class GradeCalculator {
             // Add TP/TD if applicable
             if (config.hasTP) {
                 const tp = parseFloat(subjectData.tp) || null;
-                if (tp !== null && tp > 0) {
+                if (tp !== null && tp >= 0) {
                     subjectAverage = (4 * subjectAverage + tp) / 5;
                     hasData = true;
                 }
             }
 
-            if (hasData && subjectAverage > 0) {
+            if (hasData && subjectAverage >= 0) {
                 results[subject] = {
                     average: parseFloat(subjectAverage.toFixed(2)),
                     coef: config.coef,
