@@ -3,6 +3,7 @@
 class Page2 {
     static subjectConfigs = {
         'Organic': { coef: 3, type: 'exams', count: 2 },
+        'General Chemistry': { coef: 3, type: 'exams', count: 2 },
         'Cell Biology': { coef: 3, type: 'tests', count: 3, tpToggleable: true },
         'Plant Biology': { coef: 2, type: 'tests', count: 2, hasTP: true },
         'Biostatistics': { coef: 1.5, type: 'single' },
