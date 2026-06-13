@@ -249,6 +249,15 @@
                 .catch(err => {
                     console.warn('Service Worker registration failed:', err);
                 });
+
+            // Reload page when service worker changes to get new assets immediately
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!refreshing) {
+                    refreshing = true;
+                    window.location.reload();
+                }
+            });
         }
         
         // Install prompt for PWA

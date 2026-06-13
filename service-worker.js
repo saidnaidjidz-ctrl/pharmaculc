@@ -1,6 +1,6 @@
 /* ==================== SERVICE WORKER - OFFLINE SUPPORT ==================== */
 
-const CACHE_VERSION = 'pharmacalc-v1';
+const CACHE_VERSION = 'pharmacalc-v1.1';
 const CACHE_URLS = [
   '/',
   '/index.html',
@@ -48,18 +48,16 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - Network-First, fallback to cache
 self.addEventListener('fetch', event => {
-  // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      if (response) {
-        return response;
-      }
+  // Skip non-http/https requests (e.g. chrome-extension://)
+  if (!event.request.url.startsWith('http')) return;
 
-      return fetch(event.request).then(response => {
+  event.respondWith(
+    fetch(event.request)
+      .then(response => {
         // Don't cache non-successful response
         if (!response || response.status !== 200 || response.type === 'error') {
           return response;
@@ -72,12 +70,19 @@ self.addEventListener('fetch', event => {
         });
 
         return response;
-      }).catch(err => {
-        console.warn('[Service Worker] Fetch error:', err);
-        // Serve cached version if available
-        return caches.match('/index.html');
-      });
-    })
+      })
+      .catch(err => {
+        console.warn('[Service Worker] Fetch failed, serving from cache:', err);
+        return caches.match(event.request).then(cachedResponse => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          // Serve index.html if it's a page navigation request
+          if (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html')) {
+            return caches.match('/index.html');
+          }
+        });
+      })
   );
 });
 
