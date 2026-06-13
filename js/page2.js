@@ -8,8 +8,8 @@ class Page2 {
         'Plant Biology': { coef: 2, type: 'tests', count: 2, hasTP: true },
         'Biostatistics': { coef: 1.5, type: 'single' },
         'Informatics': { coef: 1.5, type: 'single' },
-        'Anatomy': { coef: 1, type: 'single' },
-        'Physiology': { coef: 1, type: 'single' },
+        'Anatomy': { coef: 2, type: 'single' },
+        'Physiology': { coef: 2, type: 'single' },
         'Physics': { coef: 2, type: 'tests', count: 1 },
         'History': { coef: 1, type: 'tests', count: 1 },
         'English': { coef: 1, type: 'single' }
