@@ -4,9 +4,15 @@ class App {
     static currentPage = 'page2';
 
     static init() {
+        // Initialize Internationalization
+        if (typeof I18n !== 'undefined' && I18n.init) {
+            I18n.init();
+        }
+
         this.initTheme();
         this.attachNavigation();
         this.attachGlobalHandlers();
+        this.attachLanguageHandlers();
         this.showPage('page2');
     }
 
@@ -14,6 +20,8 @@ class App {
         const isDarkMode = storage.getDarkMode();
         if (isDarkMode) {
             this.enableDarkMode();
+        } else {
+            this.disableDarkMode();
         }
     }
 
@@ -24,6 +32,88 @@ class App {
                 const pageId = link.dataset.page;
                 if (pageId) {
                     this.showPage(pageId);
+                }
+            });
+        });
+
+        this.initNavScroll();
+    }
+
+    static initNavScroll() {
+        const navMenu = document.getElementById('navMenu');
+        const prevBtn = document.getElementById('navScrollPrev');
+        const nextBtn = document.getElementById('navScrollNext');
+        if (!navMenu) return;
+
+        const updateScroll = () => {
+            const wrapper = document.getElementById('navMenuWrapper');
+            if (!wrapper) return;
+
+            const isRtl = document.documentElement.getAttribute('dir') === 'rtl';
+            const maxScroll = navMenu.scrollWidth - navMenu.clientWidth;
+
+            if (maxScroll <= 4) {
+                wrapper.classList.remove('can-scroll-start', 'can-scroll-end');
+                if (prevBtn) prevBtn.classList.remove('visible');
+                if (nextBtn) nextBtn.classList.remove('visible');
+                return;
+            }
+
+            const currentScroll = Math.abs(navMenu.scrollLeft);
+
+            // Start & End indicators
+            if (currentScroll > 8) {
+                wrapper.classList.add('can-scroll-start');
+                if (prevBtn) prevBtn.classList.add('visible');
+            } else {
+                wrapper.classList.remove('can-scroll-start');
+                if (prevBtn) prevBtn.classList.remove('visible');
+            }
+
+            if (currentScroll < maxScroll - 8) {
+                wrapper.classList.add('can-scroll-end');
+                if (nextBtn) nextBtn.classList.add('visible');
+            } else {
+                wrapper.classList.remove('can-scroll-end');
+                if (nextBtn) nextBtn.classList.remove('visible');
+            }
+        };
+
+        navMenu.addEventListener('scroll', updateScroll, { passive: true });
+        window.addEventListener('resize', updateScroll, { passive: true });
+
+        if (prevBtn) {
+            prevBtn.onclick = (e) => {
+                e.preventDefault();
+                const isRtl = document.documentElement.getAttribute('dir') === 'rtl';
+                const direction = isRtl ? 160 : -160;
+                navMenu.scrollBy({ left: direction, behavior: 'smooth' });
+            };
+        }
+
+        if (nextBtn) {
+            nextBtn.onclick = (e) => {
+                e.preventDefault();
+                const isRtl = document.documentElement.getAttribute('dir') === 'rtl';
+                const direction = isRtl ? -160 : 160;
+                navMenu.scrollBy({ left: direction, behavior: 'smooth' });
+            };
+        }
+
+        // Initial check
+        setTimeout(updateScroll, 100);
+    }
+
+    static attachLanguageHandlers() {
+        const langBtns = document.querySelectorAll('.lang-btn');
+        langBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const lang = btn.dataset.lang;
+                if (lang && typeof I18n !== 'undefined') {
+                    I18n.setLanguage(lang, true);
+                    this.initNavScroll();
+                    UIUtils.showToast(I18n.t('appName') + ' — ' + (lang === 'ar' ? 'تم تغيير اللغة إلى العربية' : (lang === 'fr' ? 'Langue changée en Français' : 'Language changed to English')), 'info', 2000);
                 }
             });
         });
@@ -48,17 +138,21 @@ class App {
         const activeLink = document.querySelector(`[data-page="${pageId}"]`);
         if (activeLink) {
             activeLink.classList.add('active');
+            // Smoothly center the active tab into view on mobile
+            try {
+                activeLink.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            } catch (err) {}
         }
 
         this.currentPage = pageId;
 
         // Refresh dashboard when navigating to it
-        if (pageId === 'page4') {
-            setTimeout(() => Page4.refresh(), 100);
+        if (pageId === 'page4' && typeof Page4 !== 'undefined' && Page4.refresh) {
+            setTimeout(() => Page4.refresh(), 50);
         }
 
         // Scroll to top
-        window.scrollTo(0, 0);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     static attachGlobalHandlers() {
@@ -102,33 +196,33 @@ class App {
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-            // Alt + 1: Page 1
             if (e.altKey && e.key === '1') {
                 e.preventDefault();
-                this.showPage('page1');
-            }
-            // Alt + 2: Page 2
-            if (e.altKey && e.key === '2') {
-                e.preventDefault();
                 this.showPage('page2');
-            }
-            // Alt + 3: Page 3
-            if (e.altKey && e.key === '3') {
+            } else if (e.altKey && e.key === '2') {
+                e.preventDefault();
+                this.showPage('year2-page');
+            } else if (e.altKey && e.key === '3') {
+                e.preventDefault();
+                this.showPage('year3-page');
+            } else if (e.altKey && e.key === '4') {
+                e.preventDefault();
+                this.showPage('year4-page');
+            } else if (e.altKey && e.key === '5') {
+                e.preventDefault();
+                this.showPage('year5-page');
+            } else if (e.altKey && (e.key === 'c' || e.key === 'C')) {
                 e.preventDefault();
                 this.showPage('page3');
-            }
-            // Alt + 4: Page 4
-            if (e.altKey && e.key === '4') {
-                e.preventDefault();
-                this.showPage('page4');
-            }
-            // Alt + D: Dark Mode
-            if (e.altKey && e.key === 'd') {
+            } else if (e.altKey && (e.key === 'd' || e.key === 'D')) {
                 e.preventDefault();
                 const darkModeBtn = document.getElementById('darkModeBtn');
                 if (darkModeBtn) darkModeBtn.click();
+            } else if (e.altKey && (e.key === 'g' || e.key === 'G')) {
+                e.preventDefault();
+                this.showPage('page4');
             }
-            // Escape: Close Modals
+
             if (e.key === 'Escape') {
                 UIUtils.toggleModal('addSubjectModal', false);
                 UIUtils.toggleModal('helpModal', false);
@@ -143,9 +237,8 @@ class App {
         const darkModeBtn = document.getElementById('darkModeBtn');
         if (darkModeBtn) {
             darkModeBtn.innerHTML = '<i class="fas fa-sun"></i>';
+            darkModeBtn.title = typeof I18n !== 'undefined' ? I18n.t('navLightMode') : 'Light Mode';
         }
-
-        UIUtils.showToast('Dark mode enabled', 'success');
     }
 
     static disableDarkMode() {
@@ -155,89 +248,33 @@ class App {
         const darkModeBtn = document.getElementById('darkModeBtn');
         if (darkModeBtn) {
             darkModeBtn.innerHTML = '<i class="fas fa-moon"></i>';
+            darkModeBtn.title = typeof I18n !== 'undefined' ? I18n.t('navDarkMode') : 'Dark Mode';
         }
-
-        UIUtils.showToast('Dark mode disabled', 'success');
     }
 
-    // Version and info
     static getAppInfo() {
         return {
-            name: 'PharmCalc',
-            version: '1.0.0',
-            description: 'Modern pharmacy grade calculator for students',
-            author: 'PharmCalc Team'
+            name: 'PharmaCalc',
+            version: '2.2.0',
+            description: 'Pharmacy Grade & GPA Calculator for 1st to 5th Year Pharmacy Students',
+            author: 'Dr. Said'
         };
-    }
-
-    // Check for updates (could be implemented later)
-    static checkUpdates() {
-        // Placeholder for future update checking
-    }
-
-    // Export app state
-    static exportAppState() {
-        return storage.exportData();
-    }
-
-    // Import app state
-    static importAppState(jsonData) {
-        try {
-            if (storage.importData(jsonData)) {
-                UIUtils.showToast('Data imported successfully!', 'success');
-                location.reload();
-                return true;
-            } else {
-                UIUtils.showToast('Failed to import data', 'error');
-                return false;
-            }
-        } catch (error) {
-            UIUtils.showToast('Import failed: ' + error.message, 'error');
-            return false;
-        }
     }
 }
 
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize App first
     App.init();
 
-    // Then initialize all pages with proper timing
     setTimeout(() => {
-        if (typeof Page1 !== 'undefined' && Page1.init) Page1.init();
-        if (typeof Page2 !== 'undefined' && Page2.init) Page2.init();
-        if (typeof Page3 !== 'undefined' && Page3.init) Page3.init();
-        if (typeof Page4 !== 'undefined' && Page4.init) Page4.init();
+        if (typeof YearCalculatorManager !== 'undefined' && YearCalculatorManager.initAll) {
+            YearCalculatorManager.initAll();
+        }
+        if (typeof Page3 !== 'undefined' && Page3.init) {
+            Page3.init();
+        }
+        if (typeof Page4 !== 'undefined' && Page4.init) {
+            Page4.init();
+        }
     }, 50);
-
-    // Optional: Check if there are any errors or issues
-    console.log(
-        '%cPharmCalc v1.0.0',
-        'color: #6366f1; font-size: 16px; font-weight: bold;'
-    );
-    console.log(
-        '%cPharma Grade Calculator for Students',
-        'color: #8b5cf6; font-size: 12px;'
-    );
-    console.log(
-        'Shortcuts: Alt+1/2/3/4 (Pages), Alt+D (Dark Mode), Esc (Close Modal)'
-    );
-});
-
-// Handle window unload to save final state
-window.addEventListener('beforeunload', () => {
-    // Any final save operations can go here
-});
-
-// Prevent accidental navigation
-window.addEventListener('beforeunload', (e) => {
-    const allResults = storage.getAllResults();
-    const hasData = Object.values(allResults).some(r => r && r.average);
-    
-    if (hasData) {
-        // Modern browsers ignore custom messages for security
-        e.preventDefault();
-        e.returnValue = '';
-    }
 });

@@ -1,20 +1,22 @@
 /* ==================== SERVICE WORKER - OFFLINE SUPPORT ==================== */
 
-const CACHE_VERSION = 'pharmacalc-v1.1';
+const CACHE_VERSION = 'pharmacalc-v2.3';
 const CACHE_URLS = [
-  '/',
-  '/index.html',
-  '/styles/styles.css',
-  '/js/storage.js',
-  '/js/calculator.js',
-  '/js/ui-utils.js',
-  '/js/pdf-export.js',
-  '/js/page1.js',
-  '/js/page2.js',
-  '/js/page3.js',
-  '/js/page4.js',
-  '/js/app.js',
-  '/manifest.json'
+  './',
+  './index.html',
+  './styles/styles.css',
+  './js/years-config.js',
+  './js/storage.js',
+  './js/i18n.js',
+  './js/calculator.js',
+  './js/ui-utils.js',
+  './js/pdf-export.js',
+  './js/year-calculator.js',
+  './js/page3.js',
+  './js/page4.js',
+  './js/fixes.js',
+  './js/app.js',
+  './manifest.json'
 ];
 
 // Install event - cache files
@@ -58,12 +60,10 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        // Don't cache non-successful response
         if (!response || response.status !== 200 || response.type === 'error') {
           return response;
         }
 
-        // Clone the response for caching
         const responseClone = response.clone();
         caches.open(CACHE_VERSION).then(cache => {
           cache.put(event.request, responseClone);
@@ -72,28 +72,14 @@ self.addEventListener('fetch', event => {
         return response;
       })
       .catch(err => {
-        console.warn('[Service Worker] Fetch failed, serving from cache:', err);
         return caches.match(event.request).then(cachedResponse => {
           if (cachedResponse) {
             return cachedResponse;
           }
-          // Serve index.html if it's a page navigation request
           if (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html')) {
-            return caches.match('/index.html');
+            return caches.match('./index.html');
           }
         });
       })
   );
 });
-
-// Handle background sync
-self.addEventListener('sync', event => {
-  if (event.tag === 'sync-grades') {
-    event.waitUntil(
-      // Sync logic here if needed
-      Promise.resolve()
-    );
-  }
-});
-
-console.log('[Service Worker] Initialized - App is ready to work offline!');

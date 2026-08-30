@@ -1,5 +1,5 @@
-/* ==================== PAGE2.JS - ADVANCED STRUCTURED CALCULATOR ==================== */
-
+/* ==================== PAGE2.JS - ADVANCED STRUCTURED CALCULATOR (LEGACY BRIDGE) ==================== */
+if (typeof Page2 === 'undefined') {
 class Page2 {
     static subjectConfigs = {
         'Organic': { coef: 3, type: 'exams', count: 2 },
@@ -361,8 +361,5 @@ class Page2 {
         }
     }
 }
+}
 
-// Initialize Page 2 when DOM is ready
-//document.addEventListener('DOMContentLoaded', () => {
-//    setTimeout(() => Page2.init(), 100);
-//});

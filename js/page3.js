@@ -17,9 +17,9 @@ class Page3 {
 
         if (this.subjects.length === 0) {
             container.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: var(--text-light);">
-                    <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
-                    <p>No subjects added yet. Click "Add Subject" to get started!</p>
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-secondary);">
+                    <i class="fas fa-inbox" style="font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.5;"></i>
+                    <p>${I18n.t('customEmptyState')}</p>
                 </div>
             `;
             return;
@@ -36,7 +36,6 @@ class Page3 {
         const calculateBtn = document.getElementById('calculate-page3');
         const resetBtn = document.getElementById('reset-page3');
 
-        // Remove and re-add listeners
         if (addBtn) {
             const newAddBtn = addBtn.cloneNode(true);
             addBtn.parentNode.replaceChild(newAddBtn, addBtn);
@@ -69,83 +68,51 @@ class Page3 {
     }
 
     static openAddSubjectModal() {
-        const modal = document.getElementById('addSubjectModal');
         const subjectNameInput = document.getElementById('subjectName');
         const subjectCoefInput = document.getElementById('subjectCoef');
         const subjectExamsInput = document.getElementById('subjectExams');
         const subjectHasTPInput = document.getElementById('subjectHasTP');
 
-        // Clear previous values
-        subjectNameInput.value = '';
-        subjectCoefInput.value = '1';
-        subjectExamsInput.value = '1';
-        subjectHasTPInput.checked = false;
+        if (subjectNameInput) subjectNameInput.value = '';
+        if (subjectCoefInput) subjectCoefInput.value = '1';
+        if (subjectExamsInput) subjectExamsInput.value = '1';
+        if (subjectHasTPInput) subjectHasTPInput.checked = false;
 
         UIUtils.toggleModal('addSubjectModal', true);
     }
 
     static addSubject(name, coef, numExams, hasTP) {
         if (!name || name.trim() === '') {
-            UIUtils.showToast('Subject name is required', 'warning');
+            UIUtils.showToast(I18n.t('customNamePlaceholder'), 'warning');
             return;
         }
 
         if (isNaN(coef) || coef <= 0) {
-            UIUtils.showToast('Coefficient must be a positive number', 'warning');
-            return;
-        }
-
-        if (isNaN(numExams) || numExams < 1) {
-            UIUtils.showToast('Number of exams must be at least 1', 'warning');
+            UIUtils.showToast(I18n.t('toastGradeRange'), 'warning');
             return;
         }
 
         const subject = {
-            name: name,
+            name: name.trim(),
             coef: parseFloat(coef),
-            exams: Array(parseInt(numExams)).fill(''),
+            exams: Array(parseInt(numExams) || 1).fill(''),
             hasTP: hasTP,
-            tp: ''
+            tp: '',
+            values: {}
         };
 
         this.subjects.push(subject);
         this.saveSubjects();
         this.renderSubjects();
-        this.attachExamInputListeners();
         UIUtils.toggleModal('addSubjectModal', false);
-        UIUtils.showToast(`Subject "${name}" added!`, 'success');
+        UIUtils.showToast(I18n.t('toastSubjectAdded'), 'success');
     }
 
     static removeSubject(index) {
         this.subjects.splice(index, 1);
         this.saveSubjects();
         this.renderSubjects();
-        this.attachExamInputListeners();
-        UIUtils.showToast('Subject removed', 'success');
-    }
-
-    static attachExamInputListeners() {
-        const examInputs = document.querySelectorAll('.exam-input, .tp-input');
-        examInputs.forEach(input => {
-            input.addEventListener('change', () => this.updateSubjectData(input));
-        });
-    }
-
-    static updateSubjectData(input) {
-        const subjectIndex = parseInt(input.dataset.subjectIndex);
-        if (isNaN(subjectIndex)) return;
-
-        const subject = this.subjects[subjectIndex];
-        if (!subject) return;
-
-        if (input.classList.contains('exam-input')) {
-            const examIndex = parseInt(input.dataset.index);
-            subject.exams[examIndex] = input.value;
-        } else if (input.classList.contains('tp-input')) {
-            subject.tp = input.value;
-        }
-
-        this.saveSubjects();
+        UIUtils.showToast(I18n.t('toastYearResetSuccess'), 'success');
     }
 
     static saveSubjects() {
@@ -155,7 +122,6 @@ class Page3 {
     static loadSavedSubjects() {
         this.subjects = storage.getPage3Subjects() || [];
 
-        // Load and display previous results
         const savedResults = storage.getPage3Results();
         if (savedResults) {
             UIUtils.displayResults('page3-results', null, savedResults);
@@ -164,67 +130,75 @@ class Page3 {
 
     static calculate() {
         if (this.subjects.length === 0) {
-            UIUtils.showToast('الرجاء إضافة مقرر واحد على الأقل', 'warning');
+            UIUtils.showToast(I18n.t('toastEnterOneGrade'), 'warning');
             return;
         }
 
         let hasData = false;
 
-        // Collect data from form
         const subjectsWithData = this.subjects.map((subject, index) => {
             const card = document.querySelector(`[data-index="${index}"]`);
             if (!card) return subject;
 
-            const examInputs = card.querySelectorAll('.exam-input');
-            const tpInput = card.querySelector('.tp-input');
+            const examInputs = card.querySelectorAll('[data-field^="exam"]');
+            const tpInput = card.querySelector('[data-field="tp"]');
 
-            subject.exams = Array.from(examInputs).map(input => {
-                if (input.value && !isNaN(input.value)) {
+            const exams = [];
+            examInputs.forEach(inp => {
+                const val = inp.value.trim();
+                if (val !== '' && GradeCalculator.validateGrade(val)) {
+                    exams.push(parseFloat(val));
                     hasData = true;
-                    return parseFloat(input.value);
                 }
-                return '';
             });
 
-            if (tpInput && tpInput.value && !isNaN(tpInput.value)) {
-                subject.tp = parseFloat(tpInput.value);
-                hasData = true;
+            let tpVal = null;
+            if (tpInput) {
+                const v = tpInput.value.trim();
+                if (v !== '' && GradeCalculator.validateGrade(v)) {
+                    tpVal = parseFloat(v);
+                    hasData = true;
+                }
             }
 
-            return subject;
+            return {
+                name: subject.name,
+                coef: subject.coef,
+                exams: exams,
+                tp: tpVal
+            };
         });
 
         if (!hasData) {
-            UIUtils.showToast('الرجاء إدخال علامة واحدة على الأقل', 'warning');
+            UIUtils.showToast(I18n.t('toastEnterOneGrade'), 'warning');
             return;
         }
 
-        // Calculate results
         const results = GradeCalculator.calculateCustom(subjectsWithData);
 
         if (Object.keys(results.results).length === 0) {
-            UIUtils.showToast('الرجاء إدخال علامة واحدة على الأقل', 'warning');
+            UIUtils.showToast(I18n.t('toastGradeRange'), 'warning');
             return;
         }
 
-        // Save and display results
         storage.setPage3Results(results);
         UIUtils.displayResults('page3-results', null, results);
-        UIUtils.showToast(`✓ تم حساب المعدل: ${results.average.toFixed(2)}/20`, 'success');
+        UIUtils.showToast(`✓ ${I18n.t('finalAverage')}: ${results.average.toFixed(2)}/20`, 'success');
     }
 
     static reset() {
-        if (confirm('Are you sure you want to reset all custom subjects and grades? This cannot be undone.')) {
+        if (confirm(I18n.t('confirmResetYear'))) {
             this.subjects = [];
             this.saveSubjects();
             this.renderSubjects();
-            document.getElementById('page3-results').style.display = 'none';
-            UIUtils.showToast('Page 3 data cleared', 'success');
+            const res = document.getElementById('page3-results');
+            if (res) res.style.display = 'none';
+            UIUtils.showToast(I18n.t('toastYearResetSuccess'), 'success');
         }
     }
 }
 
-// Global functions for modal interactions
+// Global modal helpers
 function openAddSubjectModal() {
     Page3.openAddSubjectModal();
 }
@@ -242,13 +216,6 @@ function confirmAddSubject() {
     Page3.addSubject(name, coef, numExams, hasTP);
 }
 
-function removeCustomSubject(index) {
-    if (confirm('Remove this subject?')) {
-        Page3.removeSubject(index);
-    }
-}
-
-// Modal close button and initialization
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('addSubjectModal');
     if (modal) {
@@ -262,6 +229,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-    //setTimeout(() => Page3.init(), 100);
 });

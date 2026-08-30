@@ -1,7 +1,126 @@
 /* ==================== CALCULATOR.JS - CALCULATION LOGIC ==================== */
 
 class GradeCalculator {
-    // Page 1: Basic Semester Calculator
+    // Validate grade input (0 to 20)
+    static validateGrade(grade) {
+        if (grade === null || grade === undefined || grade === '') return false;
+        const num = parseFloat(grade);
+        return !isNaN(num) && num >= 0 && num <= 20;
+    }
+
+    // Generic calculation for any pharmacy year
+    static calculateYear(yearId, data) {
+        const yearConfig = YEARS_CONFIG[yearId];
+        if (!yearConfig) {
+            console.error(`Year configuration not found for: ${yearId}`);
+            return { average: 0, calculatedAverage: 0, results: {}, totalCoef: 0, status: 'weak' };
+        }
+
+        let totalWeighted = 0;
+        let totalCoef = 0;
+        const results = {};
+
+        for (const subject of yearConfig.subjects) {
+            const key = subject.key;
+            const subjectData = data[key] || {};
+
+            let subjectAverage = 0;
+            let hasData = false;
+            const testGrades = [];
+
+            // Determine test count (support user choice for subjects like Chimie minérale)
+            const testCount = parseInt(subjectData.testCountChoice || subject.count || 1);
+
+            if (subject.type === 'exams') {
+                const examCount = subject.count || 2;
+                const exams = [];
+                for (let i = 1; i <= examCount; i++) {
+                    const val = subjectData[`exam${i}`];
+                    if (this.validateGrade(val)) {
+                        exams.push(parseFloat(val));
+                        hasData = true;
+                    }
+                }
+                if (exams.length > 0) {
+                    subjectAverage = exams.reduce((a, b) => a + b, 0) / exams.length;
+                }
+            } else if (subject.type === 'tests') {
+                for (let i = 1; i <= testCount; i++) {
+                    const val = subjectData[`test${i}`];
+                    if (this.validateGrade(val)) {
+                        const num = parseFloat(val);
+                        testGrades.push(num);
+                        hasData = true;
+                    }
+                }
+                if (testGrades.length > 0) {
+                    // Average of tests: (T1 + T2 + ... + Tn) / n
+                    subjectAverage = testGrades.reduce((a, b) => a + b, 0) / testGrades.length;
+                }
+            } else if (subject.type === 'single') {
+                const val = subjectData.grade;
+                if (this.validateGrade(val)) {
+                    subjectAverage = parseFloat(val);
+                    hasData = true;
+                }
+            }
+
+            // Handle TP calculation
+            // Formula: (4 × Moyenne_Tests + TP) / 5
+            // Tests contribute 4/5 of subject grade, TP contributes 1/5
+            let tpGrade = null;
+            if (subject.hasTP || subject.tpToggleable) {
+                const tpVal = subjectData.tp;
+                if (this.validateGrade(tpVal)) {
+                    tpGrade = parseFloat(tpVal);
+                    if (hasData) {
+                        // TP formula: (4 × Moyenne_Tests + TP) / 5
+                        subjectAverage = (4 * subjectAverage + tpGrade) / 5;
+                    } else {
+                        // If only TP entered (no test grades)
+                        subjectAverage = tpGrade;
+                        hasData = true;
+                    }
+                }
+                // If TP is optional and not provided, subjectAverage = moyenne des tests (no penalty)
+            }
+
+            if (hasData) {
+                const weighted = subjectAverage * subject.coef;
+                results[key] = {
+                    key: key,
+                    name: subject.name,
+                    average: parseFloat(subjectAverage.toFixed(2)),
+                    testAverage: testGrades.length > 0 ? parseFloat((testGrades.reduce((a, b) => a + b, 0) / testGrades.length).toFixed(2)) : null,
+                    tpGrade: tpGrade,
+                    testGrades: testGrades,
+                    testCount: testCount,
+                    coef: subject.coef,
+                    weighted: parseFloat(weighted.toFixed(2))
+                };
+                totalWeighted += weighted;
+                totalCoef += subject.coef;
+            }
+        }
+
+        const calculatedAverage = totalCoef > 0 ? (totalWeighted / totalCoef) : 0;
+        
+        // Final Average rule: Add +0.05 once to the general calculated average
+        // Clamped at 20 max
+        const finalAverage = totalCoef > 0 ? Math.min(20, calculatedAverage + 0.05) : 0;
+
+        return {
+            calculatedAverage: parseFloat(calculatedAverage.toFixed(2)),
+            average: parseFloat(finalAverage.toFixed(2)), // Main display average with +0.05
+            bonusAdded: totalCoef > 0 ? 0.05 : 0,
+            results: results,
+            totalCoef: totalCoef,
+            totalWeighted: parseFloat(totalWeighted.toFixed(2)),
+            status: this.getStatus(finalAverage)
+        };
+    }
+
+    // Page 1: Basic Semester Calculator (Legacy)
     static calculateBasicSemester(grades) {
         const subjects = {
             'Organic': 3,
@@ -18,9 +137,10 @@ class GradeCalculator {
 
         for (const [subject, coef] of Object.entries(subjects)) {
             const grade = parseFloat(grades[subject]) || 0;
-            if (grade > 0) {
+            if (this.validateGrade(grade) && grade > 0) {
                 results[subject] = {
-                    average: grade,  // Changed from 'grade' to 'average' for consistency
+                    name: subject,
+                    average: grade,
                     coef: coef,
                     weighted: grade * coef
                 };
@@ -29,103 +149,22 @@ class GradeCalculator {
             }
         }
 
-        const average = totalCoef > 0 ? (totalWeighted / totalCoef).toFixed(2) : 0;
+        const calculatedAverage = totalCoef > 0 ? (totalWeighted / totalCoef) : 0;
+        const finalAverage = totalCoef > 0 ? Math.min(20, calculatedAverage + 0.05) : 0;
 
         return {
-            average: parseFloat(average),
+            calculatedAverage: parseFloat(calculatedAverage.toFixed(2)),
+            average: parseFloat(finalAverage.toFixed(2)),
+            bonusAdded: totalCoef > 0 ? 0.05 : 0,
             results: results,
             totalCoef: totalCoef,
-            status: this.getStatus(parseFloat(average))
+            status: this.getStatus(finalAverage)
         };
     }
 
-    // Page 2: Advanced Structured Calculator
+    // Page 2: Advanced Structured Calculator (1st Year Legacy / Bridge)
     static calculateAdvancedStructured(data) {
-        const subjectConfigs = {
-            'Organic': { coef: 3, exams: 2 },
-            'General Chemistry': { coef: 3, exams: 2 },
-            'Cell Biology': { coef: 3, tests: 3, tpToggleable: true },
-            'Plant Biology': { coef: 2, tests: 2, hasTP: true },
-            'Biostatistics': { coef: 1.5 },
-            'Informatics': { coef: 1.5 },
-            'Anatomy': { coef: 2 },
-            'Physiology': { coef: 2 },
-            'Physics': { coef: 2, tests: 1 },
-            'History': { coef: 1, tests: 1 },
-            'English': { coef: 1 }
-        };
-
-        let totalWeighted = 0;
-        let totalCoef = 0;
-        const results = {};
-
-        for (const [subject, config] of Object.entries(subjectConfigs)) {
-            const subjectKey = subject.toLowerCase().replace(/\s+/g, '');
-            const subjectData = data[subjectKey] || {};
-
-            let subjectAverage = 0;
-            let hasData = false;
-
-            if (config.exams) {
-                const exams = [];
-                for (let i = 1; i <= config.exams; i++) {
-                    const grade = parseFloat(subjectData[`exam${i}`]) || null;
-                    if (grade !== null && grade >= 0) {
-                        exams.push(grade);
-                        hasData = true;
-                    }
-                }
-                if (exams.length > 0) {
-                    subjectAverage = exams.reduce((a, b) => a + b) / exams.length;
-                }
-            } else if (config.tests) {
-                const tests = [];
-                for (let i = 1; i <= config.tests; i++) {
-                    const grade = parseFloat(subjectData[`test${i}`]) || null;
-                    if (grade !== null && grade >= 0) {
-                        tests.push(grade);
-                        hasData = true;
-                    }
-                }
-                if (tests.length > 0) {
-                    subjectAverage = tests.reduce((a, b) => a + b) / tests.length;
-                }
-            } else {
-                const grade = parseFloat(subjectData.grade) || null;
-                if (grade !== null && grade >= 0) {
-                    subjectAverage = grade;
-                    hasData = true;
-                }
-            }
-
-            // Add TP if applicable
-            if ((config.hasTP || config.tpToggleable) && hasData) {
-                const tp = parseFloat(subjectData.tp) || null;
-                if (tp !== null && tp >= 0) {
-                    subjectAverage = (4 * subjectAverage + tp) / 5;
-                    hasData = true;
-                }
-            }
-
-            if (hasData && subjectAverage >= 0) {
-                results[subject] = {
-                    average: parseFloat(subjectAverage.toFixed(2)),
-                    coef: config.coef,
-                    weighted: subjectAverage * config.coef
-                };
-                totalWeighted += subjectAverage * config.coef;
-                totalCoef += config.coef;
-            }
-        }
-
-        const average = totalCoef > 0 ? (totalWeighted / totalCoef).toFixed(2) : 0;
-
-        return {
-            average: parseFloat(average),
-            results: results,
-            totalCoef: totalCoef,
-            status: this.getStatus(parseFloat(average))
-        };
+        return this.calculateYear('year1', data);
     }
 
     // Page 3: Custom Calculator
@@ -141,19 +180,20 @@ class GradeCalculator {
 
             if (exams && exams.length > 0) {
                 const validGrades = exams
-                    .map(e => parseFloat(e) || null)
-                    .filter(e => e !== null && e >= 0 && e <= 20);
+                    .map(e => parseFloat(e))
+                    .filter(e => GradeCalculator.validateGrade(e));
 
                 if (validGrades.length > 0) {
-                    subjectAverage = validGrades.reduce((a, b) => a + b) / validGrades.length;
+                    subjectAverage = validGrades.reduce((a, b) => a + b, 0) / validGrades.length;
                     hasData = true;
                 }
             }
 
             if (tp !== undefined && tp !== null && tp !== '') {
-                const tpGrade = parseFloat(tp) || null;
-                if (tpGrade !== null && tpGrade >= 0 && tpGrade <= 20) {
+                const tpGrade = parseFloat(tp);
+                if (GradeCalculator.validateGrade(tpGrade)) {
                     if (hasData) {
+                        // TP formula: (4 × Moyenne_Tests + TP) / 5
                         subjectAverage = (4 * subjectAverage + tpGrade) / 5;
                     } else {
                         subjectAverage = tpGrade;
@@ -162,25 +202,29 @@ class GradeCalculator {
                 }
             }
 
-            if (hasData && subjectAverage > 0) {
+            if (hasData && subjectAverage >= 0) {
+                const coefNum = parseFloat(coef) || 1;
                 results[index] = {
                     name: name,
                     average: parseFloat(subjectAverage.toFixed(2)),
-                    coef: parseFloat(coef),
-                    weighted: subjectAverage * parseFloat(coef)
+                    coef: coefNum,
+                    weighted: parseFloat((subjectAverage * coefNum).toFixed(2))
                 };
-                totalWeighted += subjectAverage * parseFloat(coef);
-                totalCoef += parseFloat(coef);
+                totalWeighted += subjectAverage * coefNum;
+                totalCoef += coefNum;
             }
         });
 
-        const average = totalCoef > 0 ? (totalWeighted / totalCoef).toFixed(2) : 0;
+        const calculatedAverage = totalCoef > 0 ? (totalWeighted / totalCoef) : 0;
+        const finalAverage = totalCoef > 0 ? Math.min(20, calculatedAverage + 0.05) : 0;
 
         return {
-            average: parseFloat(average),
+            calculatedAverage: parseFloat(calculatedAverage.toFixed(2)),
+            average: parseFloat(finalAverage.toFixed(2)),
+            bonusAdded: totalCoef > 0 ? 0.05 : 0,
             results: results,
             totalCoef: totalCoef,
-            status: this.getStatus(parseFloat(average))
+            status: this.getStatus(finalAverage)
         };
     }
 
@@ -191,45 +235,20 @@ class GradeCalculator {
         return 'weak';
     }
 
-    // Get status label (with Arabic translations)
+    // Get status label (with Arabic & English translations)
     static getStatusLabel(status) {
         const labels = {
-            'good': { en: 'Excellent', ar: 'ممتاز', emoji: '✅' },
-            'medium': { en: 'Medium', ar: 'متوسط', emoji: '⚠️' },
-            'weak': { en: 'Weak', ar: 'ضعيف', emoji: '❌' }
+            'good': { en: 'Excellent', ar: 'ناجح بملاحظة جيدة', emoji: '✅' },
+            'medium': { en: 'Admitted', ar: 'ناجح / مقبول', emoji: '🎉' },
+            'weak': { en: 'Ajourné', ar: 'راسب / مؤجل', emoji: '❌' }
         };
         return labels[status] || labels.weak;
-    }
-
-    // Calculate cumulative average across all pages
-    static calculateCumulativeAverage(page1Results, page2Results, page3Results) {
-        const averages = [];
-        
-        if (page1Results && page1Results.average) {
-            averages.push(page1Results.average);
-        }
-        if (page2Results && page2Results.average) {
-            averages.push(page2Results.average);
-        }
-        if (page3Results && page3Results.average) {
-            averages.push(page3Results.average);
-        }
-
-        if (averages.length === 0) return 0;
-        const cumulative = averages.reduce((a, b) => a + b) / averages.length;
-        return parseFloat(cumulative.toFixed(2));
-    }
-
-    // Validate grade input
-    static validateGrade(grade) {
-        const num = parseFloat(grade);
-        return !isNaN(num) && num >= 0 && num <= 20;
     }
 
     // Get color based on grade
     static getGradeColor(average) {
         if (average >= 14) return '#10b981'; // Green
-        if (average >= 10) return '#f59e0b'; // Orange
+        if (average >= 10) return '#3b82f6'; // Blue/Neutral
         return '#ef4444'; // Red
     }
 }

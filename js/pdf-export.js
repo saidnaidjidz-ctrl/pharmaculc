@@ -2,15 +2,37 @@
 
 class PDFExporter {
     static generatePDF() {
-        // Create a new window for printing
         const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            UIUtils.showToast('Please allow popups to export PDF', 'warning');
+            return;
+        }
+
         const allResults = storage.getAllResults();
+        const lang = typeof I18n !== 'undefined' ? I18n.currentLang : 'ar';
+        const isRtl = lang === 'ar';
+
+        let sectionsHtml = '';
+        const yearKeys = ['year1', 'year2', 'year3', 'year4', 'year5'];
+
+        yearKeys.forEach(yr => {
+            const config = YEARS_CONFIG[yr];
+            const title = config ? config.name : yr;
+            if (allResults[yr] && allResults[yr].results && Object.keys(allResults[yr].results).length > 0) {
+                sectionsHtml += this.generateSection(title, allResults[yr]);
+            }
+        });
+
+        if (allResults.page3 && allResults.page3.results && Object.keys(allResults.page3.results).length > 0) {
+            sectionsHtml += this.generateSection(I18n.t('titleCustom'), allResults.page3);
+        }
 
         const html = `
             <!DOCTYPE html>
-            <html>
+            <html dir="${isRtl ? 'rtl' : 'ltr'}" lang="${lang}">
             <head>
-                <title>PharmCalc - Grade Report</title>
+                <meta charset="UTF-8">
+                <title>PharmaCalc - ${I18n.t('appName')}</title>
                 <style>
                     * {
                         margin: 0;
@@ -18,153 +40,138 @@ class PDFExporter {
                         box-sizing: border-box;
                     }
                     body {
-                        font-family: 'Arial', sans-serif;
-                        color: #333;
+                        font-family: ${isRtl ? "'Segoe UI', Tahoma, Arial, sans-serif" : "'Segoe UI', Roboto, Helvetica, sans-serif"};
+                        color: #242326;
                         line-height: 1.6;
-                        padding: 20px;
+                        padding: 25px;
+                        background: #ffffff;
                     }
                     .header {
                         text-align: center;
-                        margin-bottom: 30px;
-                        border-bottom: 3px solid #6366f1;
+                        margin-bottom: 25px;
+                        border-bottom: 3px solid #5D42C9;
                         padding-bottom: 15px;
                     }
                     .header h1 {
-                        color: #6366f1;
-                        font-size: 28px;
+                        color: #5D42C9;
+                        font-size: 26px;
+                        font-weight: 800;
                         margin-bottom: 5px;
                     }
                     .header p {
-                        color: #666;
+                        color: #77777A;
                         font-size: 14px;
                     }
                     .report-date {
-                        text-align: right;
+                        text-align: ${isRtl ? 'left' : 'right'};
                         margin-bottom: 20px;
-                        color: #999;
+                        color: #77777A;
                         font-size: 12px;
                     }
                     .section {
                         margin-bottom: 30px;
                         page-break-inside: avoid;
+                        background: #F2F2F4;
+                        border: 1px solid #E8E8EA;
+                        border-radius: 8px;
+                        padding: 15px;
                     }
                     .section-title {
                         font-size: 18px;
                         font-weight: bold;
-                        color: #6366f1;
+                        color: #5D42C9;
                         margin-bottom: 15px;
-                        padding-bottom: 10px;
-                        border-bottom: 2px solid #e0e7ff;
+                        padding-bottom: 8px;
+                        border-bottom: 2px solid #E8E8EA;
                     }
                     .results-table {
                         width: 100%;
                         border-collapse: collapse;
                         margin-bottom: 15px;
+                        background: #ffffff;
                     }
                     .results-table th,
                     .results-table td {
-                        padding: 12px;
-                        text-align: left;
-                        border-bottom: 1px solid #ddd;
+                        padding: 10px 12px;
+                        text-align: ${isRtl ? 'right' : 'left'};
+                        border: 1px solid #E8E8EA;
+                        font-size: 13px;
                     }
                     .results-table th {
-                        background-color: #f0f4f8;
+                        background-color: #E4DFF1;
                         font-weight: bold;
-                        color: #333;
+                        color: #3D285E;
                     }
                     .results-table tr:nth-child(even) {
-                        background-color: #f9fafb;
+                        background-color: #F1F1F2;
                     }
                     .grade-cell {
                         font-weight: bold;
                         text-align: center;
-                    }
-                    .grade-good {
-                        color: #10b981;
-                    }
-                    .grade-medium {
-                        color: #f59e0b;
-                    }
-                    .grade-weak {
-                        color: #ef4444;
+                        direction: ltr;
                     }
                     .summary-box {
-                        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+                        background: #5D42C9;
                         color: white;
-                        padding: 20px;
+                        padding: 15px 20px;
                         border-radius: 8px;
-                        margin-bottom: 20px;
+                        margin-bottom: 15px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
                     }
                     .summary-item {
                         display: inline-block;
-                        margin-right: 30px;
-                        margin-bottom: 10px;
                     }
                     .summary-label {
                         font-size: 12px;
                         opacity: 0.9;
                     }
                     .summary-value {
-                        font-size: 24px;
+                        font-size: 22px;
                         font-weight: bold;
+                        direction: ltr;
+                    }
+                    .bonus-tag {
+                        background: rgba(255, 255, 255, 0.2);
+                        padding: 3px 8px;
+                        border-radius: 4px;
+                        font-size: 11px;
                     }
                     .status-badge {
                         display: inline-block;
-                        padding: 5px 10px;
+                        padding: 5px 12px;
                         border-radius: 4px;
                         font-size: 12px;
                         font-weight: bold;
-                    }
-                    .status-good {
-                        background-color: #d1fae5;
-                        color: #065f46;
-                    }
-                    .status-medium {
-                        background-color: #fef3c7;
-                        color: #92400e;
-                    }
-                    .status-weak {
-                        background-color: #fee2e2;
-                        color: #991b1b;
-                    }
-                    .no-data {
-                        text-align: center;
-                        color: #999;
-                        font-style: italic;
-                        padding: 20px;
+                        background: rgba(255, 255, 255, 0.2);
                     }
                     @media print {
-                        body {
-                            padding: 0;
-                        }
-                        .section {
-                            page-break-inside: avoid;
-                        }
+                        body { padding: 0; }
+                        .section { page-break-inside: avoid; }
                     }
                 </style>
             </head>
             <body>
                 <div class="header">
-                    <h1>🧬 PharmCalc - Grade Report</h1>
-                    <p>Pharmacy Student Grade Calculator</p>
+                    <h1>PharmaCalc</h1>
+                    <p>${I18n.t('appTagline')}</p>
                 </div>
 
                 <div class="report-date">
-                    Generated on: ${new Date().toLocaleString()}
+                    ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
                 </div>
 
-                ${this.generateSection('Page 1: Basic Semester Calculator', allResults.page1)}
-                ${this.generateSection('Page 2: Advanced Structured Calculator', allResults.page2)}
-                ${this.generateSection('Page 3: Custom Calculator', allResults.page3)}
+                ${sectionsHtml || `<div style="text-align: center; padding: 30px; color: #77777A;">${I18n.t('dashNoData')}</div>`}
 
                 <div class="section">
-                    <div class="section-title">Overall Performance</div>
+                    <div class="section-title">${I18n.t('dashGlobalTitle')}</div>
                     ${this.generateOverallSummary(allResults)}
                 </div>
 
-                <div style="margin-top: 40px; text-align: center; color: #999; font-size: 12px; page-break-inside: avoid;">
-                    <p>This report was generated by PharmCalc - Your Pharmacy Grade Calculator</p>
-                    <p>For more information, visit your calculator dashboard</p>
+                <div style="margin-top: 30px; text-align: center; color: #77777A; font-size: 12px;">
+                    <p><strong>PharmaCalc</strong> — ${I18n.t('footerTagline')}</p>
+                    <p>© 2026 PharmaCalc | Dr. Said</p>
                 </div>
             </body>
             </html>
@@ -173,35 +180,30 @@ class PDFExporter {
         printWindow.document.write(html);
         printWindow.document.close();
 
-        // Trigger print dialog
         setTimeout(() => {
             printWindow.print();
-        }, 250);
+        }, 300);
     }
 
     static generateSection(title, results) {
-        if (!results) {
-            return `
-                <div class="section">
-                    <div class="section-title">${title}</div>
-                    <div class="no-data">No data available</div>
-                </div>
-            `;
-        }
-
-        const statusLabel = GradeCalculator.getStatusLabel(results.status);
-        const statusClass = results.status === 'good' ? 'status-good' : (results.status === 'medium' ? 'status-medium' : 'status-weak');
+        if (!results) return '';
 
         let tableRows = '';
         if (results.results && typeof results.results === 'object') {
             for (const [key, value] of Object.entries(results.results)) {
-                const gradeClass = value.average >= 14 ? 'grade-good' : (value.average >= 10 ? 'grade-medium' : 'grade-weak');
+                const gradeVal = value.average !== undefined ? value.average : value.grade;
+                const tpVal = value.tpGrade !== null && value.tpGrade !== undefined ? `${value.tpGrade.toFixed(2)}` : '-';
+                const testVal = value.testAverage !== null && value.testAverage !== undefined ? `${value.testAverage.toFixed(2)}` : `${gradeVal.toFixed(2)}`;
+                const displayName = I18n.getSubjectName(key, value.name || key);
+
                 tableRows += `
                     <tr>
-                        <td>${value.name || key}</td>
+                        <td><strong>${displayName}</strong></td>
                         <td style="text-align: center;">${value.coef}</td>
-                        <td class="grade-cell ${gradeClass}">${value.average.toFixed(2)}/20</td>
-                        <td class="grade-cell ${gradeClass}">${(value.weighted).toFixed(2)}</td>
+                        <td class="grade-cell">${testVal}</td>
+                        <td class="grade-cell">${tpVal}</td>
+                        <td class="grade-cell" style="color: #5D42C9;">${gradeVal.toFixed(2)} / 20</td>
+                        <td class="grade-cell">${(value.weighted || gradeVal * value.coef).toFixed(2)}</td>
                     </tr>
                 `;
             }
@@ -210,117 +212,65 @@ class PDFExporter {
         return `
             <div class="section">
                 <div class="section-title">${title}</div>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>${I18n.t('customNamePlaceholder')}</th>
+                            <th style="text-align: center;">${I18n.t('labelCoef')}</th>
+                            <th style="text-align: center;">${I18n.t('labelTest')}</th>
+                            <th style="text-align: center;">TP</th>
+                            <th style="text-align: center;">${I18n.t('subjectAverage')}</th>
+                            <th style="text-align: center;">${I18n.t('weightedGrade')}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
                 <div class="summary-box">
                     <div class="summary-item">
-                        <div class="summary-label">Average</div>
-                        <div class="summary-value">${results.average.toFixed(2)}/20</div>
+                        <div class="summary-label">${I18n.t('finalAverage')}</div>
+                        <div class="summary-value">${results.average.toFixed(2)} / 20</div>
                     </div>
                     <div class="summary-item">
-                        <div class="summary-label">Status</div>
-                        <div class="summary-value" style="font-size: 18px;">
-                            <span class="status-badge ${statusClass}">${statusLabel.emoji} ${statusLabel.en}</span>
-                        </div>
+                        <span class="bonus-tag">${I18n.t('bonusAdded')}</span>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">${I18n.t('totalCoef')}</div>
+                        <div class="summary-value">${results.totalCoef || '-'}</div>
                     </div>
                 </div>
-                ${tableRows ? `
-                    <table class="results-table">
-                        <thead>
-                            <tr>
-                                <th>Subject</th>
-                                <th style="text-align: center;">Coefficient</th>
-                                <th style="text-align: center;">Grade</th>
-                                <th style="text-align: center;">Weighted</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${tableRows}
-                        </tbody>
-                    </table>
-                ` : '<div class="no-data">No grades entered</div>'}
             </div>
         `;
     }
 
     static generateOverallSummary(allResults) {
         const averages = [];
-        if (allResults.page1 && allResults.page1.average) averages.push(allResults.page1.average);
-        if (allResults.page2 && allResults.page2.average) averages.push(allResults.page2.average);
-        if (allResults.page3 && allResults.page3.average) averages.push(allResults.page3.average);
+        ['year1', 'year2', 'year3', 'year4', 'year5'].forEach(yr => {
+            if (allResults[yr] && allResults[yr].average) {
+                averages.push(allResults[yr].average);
+            }
+        });
 
-        if (averages.length === 0) {
-            return '<div class="no-data">No data available for overall calculation</div>';
+        if (allResults.page3 && allResults.page3.average) {
+            averages.push(allResults.page3.average);
         }
 
-        const cumulativeAverage = averages.reduce((a, b) => a + b) / averages.length;
-        const status = GradeCalculator.getStatus(cumulativeAverage);
-        const statusLabel = GradeCalculator.getStatusLabel(status);
-        const statusClass = status === 'good' ? 'status-good' : (status === 'medium' ? 'status-medium' : 'status-weak');
+        const cumulative = averages.length > 0
+            ? averages.reduce((a, b) => a + b, 0) / averages.length
+            : 0;
 
         return `
-            <div class="summary-box">
+            <div class="summary-box" style="margin-top: 10px;">
                 <div class="summary-item">
-                    <div class="summary-label">Cumulative Average</div>
-                    <div class="summary-value">${cumulativeAverage.toFixed(2)}/20</div>
+                    <div class="summary-label">${I18n.t('dashGlobalTitle')}</div>
+                    <div class="summary-value">${cumulative.toFixed(2)} / 20</div>
                 </div>
                 <div class="summary-item">
-                    <div class="summary-label">Overall Status</div>
-                    <div class="summary-value" style="font-size: 18px;">
-                        <span class="status-badge ${statusClass}">${statusLabel.emoji} ${statusLabel.en}</span>
-                    </div>
-                </div>
-                <div class="summary-item">
-                    <div class="summary-label">Calculators Used</div>
+                    <div class="summary-label">${I18n.t('dashYearsCalculated')}</div>
                     <div class="summary-value">${averages.length}</div>
                 </div>
             </div>
         `;
-    }
-
-    // Export data as JSON
-    static downloadJSON() {
-        const data = storage.exportData();
-        const json = JSON.stringify(data, null, 2);
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `pharmcalc-backup-${new Date().toISOString().slice(0, 10)}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        UIUtils.showToast('Data exported successfully!', 'success');
-    }
-
-    // Export as CSV
-    static downloadCSV() {
-        const allResults = storage.getAllResults();
-        let csv = 'PharmCalc Grade Report\n\n';
-
-        const addSection = (title, results) => {
-            if (results && results.results) {
-                csv += `${title}\n`;
-                csv += 'Subject,Coefficient,Grade,Weighted\n';
-                for (const [key, value] of Object.entries(results.results)) {
-                    csv += `${value.name || key},${value.coef},${value.average.toFixed(2)},${value.weighted.toFixed(2)}\n`;
-                }
-                csv += `AVERAGE,${results.totalCoef},${results.average.toFixed(2)},\n\n`;
-            }
-        };
-
-        addSection('Page 1: Basic Semester', allResults.page1);
-        addSection('Page 2: Advanced Structured', allResults.page2);
-        addSection('Page 3: Custom', allResults.page3);
-
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `pharmcalc-report-${new Date().toISOString().slice(0, 10)}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        UIUtils.showToast('Report exported as CSV!', 'success');
     }
 }

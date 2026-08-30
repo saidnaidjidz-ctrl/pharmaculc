@@ -16,12 +16,37 @@ class Page4 {
 
         // Overall Stats
         const averages = [];
-        if (allResults.page1 && allResults.page1.average) averages.push(allResults.page1.average);
-        if (allResults.page2 && allResults.page2.average) averages.push(allResults.page2.average);
-        if (allResults.page3 && allResults.page3.average) averages.push(allResults.page3.average);
+        const yearKeys = ['year1', 'year2', 'year3', 'year4', 'year5'];
 
-        const cumulativeAverage = averages.length > 0 
-            ? averages.reduce((a, b) => a + b) / averages.length 
+        yearKeys.forEach(yr => {
+            if (allResults[yr] && allResults[yr].average) {
+                averages.push({
+                    id: yr,
+                    name: YEARS_CONFIG[yr] ? YEARS_CONFIG[yr].shortName : yr,
+                    average: allResults[yr].average,
+                    calculatedAverage: allResults[yr].calculatedAverage,
+                    status: allResults[yr].status,
+                    totalCoef: allResults[yr].totalCoef,
+                    results: allResults[yr].results
+                });
+            }
+        });
+
+        if (allResults.page3 && allResults.page3.average) {
+            averages.push({
+                id: 'page3',
+                name: I18n.t('titleCustom'),
+                average: allResults.page3.average,
+                calculatedAverage: allResults.page3.calculatedAverage,
+                status: allResults.page3.status,
+                totalCoef: allResults.page3.totalCoef,
+                results: allResults.page3.results
+            });
+        }
+
+        const avgValues = averages.map(a => a.average);
+        const cumulativeAverage = avgValues.length > 0 
+            ? avgValues.reduce((a, b) => a + b, 0) / avgValues.length 
             : 0;
         const cumulativeStatus = GradeCalculator.getStatus(cumulativeAverage);
 
@@ -29,93 +54,78 @@ class Page4 {
         html += '<div class="dashboard-stats">';
 
         // Cumulative card
-        const cumulativeCard = document.createElement('div');
-        cumulativeCard.className = 'stat-card';
-        cumulativeCard.style.background = 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))';
-        
-        const statusLabel = GradeCalculator.getStatusLabel(cumulativeStatus);
         const statusColor = GradeCalculator.getGradeColor(cumulativeAverage);
 
+        let statusText = '';
+        if (cumulativeStatus === 'good') {
+            statusText = `✅ ${I18n.t('statusGood')}`;
+        } else if (cumulativeStatus === 'medium') {
+            statusText = `🎉 ${I18n.t('statusMedium')}`;
+        } else {
+            statusText = `❌ ${I18n.t('statusWeak')}`;
+        }
+
         if (averages.length > 0) {
-            cumulativeCard.innerHTML = `
-                <div class="stat-icon" style="color: ${statusColor};">
-                    <i class="fas fa-crown"></i>
-                </div>
-                <div class="stat-label">Cumulative Average</div>
-                <div class="stat-value" style="color: ${statusColor};">${cumulativeAverage.toFixed(2)}</div>
-                <div style="margin-top: 0.5rem; text-align: center;">
-                    <span style="background: rgba(99, 102, 241, 0.2); color: var(--primary-color); padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600;">
-                        ${statusLabel.emoji} ${statusLabel.en}
-                    </span>
+            html += `
+                <div class="stat-card" style="border: 2px solid var(--color-primary);">
+                    <div class="stat-icon" style="color: ${statusColor};">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="stat-label">${I18n.t('dashGlobalTitle')}</div>
+                    <div class="stat-value" style="color: ${statusColor};">${cumulativeAverage.toFixed(2)}/20</div>
+                    <div style="margin-top: 0.5rem; text-align: center;">
+                        <span class="bonus-badge">
+                            ${statusText}
+                        </span>
+                    </div>
                 </div>
             `;
         } else {
-            cumulativeCard.innerHTML = `
-                <div class="stat-icon">
-                    <i class="fas fa-question"></i>
-                </div>
-                <div class="stat-label">Cumulative Average</div>
-                <div style="text-align: center; color: var(--text-light); font-size: 0.875rem; margin-top: 0.5rem;">
-                    No data available
+            html += `
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-simple"></i>
+                    </div>
+                    <div class="stat-label">${I18n.t('dashGlobalTitle')}</div>
+                    <div style="text-align: center; color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">
+                        ${I18n.t('dashNoData')}
+                    </div>
                 </div>
             `;
         }
 
-        html += cumulativeCard.outerHTML;
-
-        // Individual calculator averages
-        if (allResults.page1 && allResults.page1.average) {
-            html += UIUtils.createStatCard(
-                '<i class="fas fa-calculator"></i>',
-                'Basic Semester',
-                allResults.page1.average,
-                allResults.page1.status
-            ).outerHTML;
-        }
-
-        if (allResults.page2 && allResults.page2.average) {
-            html += UIUtils.createStatCard(
-                '<i class="fas fa-list-check"></i>',
-                'Structured',
-                allResults.page2.average,
-                allResults.page2.status
-            ).outerHTML;
-        }
-
-        if (allResults.page3 && allResults.page3.average) {
-            html += UIUtils.createStatCard(
-                '<i class="fas fa-wand-magic-sparkles"></i>',
-                'Custom',
-                allResults.page3.average,
-                allResults.page3.status
-            ).outerHTML;
-        }
+        // Individual year average cards
+        averages.forEach(item => {
+            const iconClass = YEARS_CONFIG[item.id] ? YEARS_CONFIG[item.id].icon : 'fas fa-wand-magic-sparkles';
+            const itemColor = GradeCalculator.getGradeColor(item.average);
+            html += `
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: var(--color-primary);">
+                        <i class="${iconClass}"></i>
+                    </div>
+                    <div class="stat-label">${item.name}</div>
+                    <div class="stat-value" style="color: ${itemColor};">${item.average.toFixed(2)}/20</div>
+                    <div style="margin-top: 0.4rem; font-size: 0.78rem; color: var(--text-secondary);">
+                        ${I18n.t('totalCoef')}: <strong>${item.totalCoef || '-'}</strong>
+                    </div>
+                </div>
+            `;
+        });
 
         html += '</div>';
 
         // Detailed Results Section
-        html += '<div class="dashboard-details">';
-
-        if (allResults.page1 && allResults.page1.results && Object.keys(allResults.page1.results).length > 0) {
-            html += this.renderCalculatorCard('Page 1: Basic Semester', allResults.page1);
-        }
-
-        if (allResults.page2 && allResults.page2.results && Object.keys(allResults.page2.results).length > 0) {
-            html += this.renderCalculatorCard('Page 2: Structured', allResults.page2);
-        }
-
-        if (allResults.page3 && allResults.page3.results && Object.keys(allResults.page3.results).length > 0) {
-            html += this.renderCalculatorCard('Page 3: Custom', allResults.page3);
-        }
-
-        html += '</div>';
-
-        if (averages.length === 0) {
-            html = `
-                <div style="text-align: center; padding: 60px 20px; color: var(--text-light);">
-                    <i class="fas fa-chart-line" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.3;"></i>
-                    <h2 style="font-size: 1.5rem; color: var(--text-secondary); margin-bottom: 0.5rem;">No Data Yet</h2>
-                    <p style="max-width: 400px; margin: 0 auto;">Start calculating your grades on other pages to see your overall performance here!</p>
+        if (averages.length > 0) {
+            html += '<div class="dashboard-details">';
+            averages.forEach(item => {
+                html += this.renderCalculatorCard(item.name, item);
+            });
+            html += '</div>';
+        } else {
+            html += `
+                <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+                    <i class="fas fa-chart-line" style="font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                    <h2 style="font-size: 1.35rem; color: var(--text-primary); margin-bottom: 0.5rem;">${I18n.t('dashNoData')}</h2>
                 </div>
             `;
         }
@@ -126,41 +136,54 @@ class Page4 {
     static renderCalculatorCard(title, results) {
         let html = `
             <div class="card">
-                <div class="card-title">${title}</div>
-                <div style="margin-bottom: 1rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span style="color: var(--text-secondary);">Average:</span>
-                        <strong style="color: var(--primary-color);">${results.average.toFixed(2)}/20</strong>
+                <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>${title}</span>
+                    <span class="bonus-badge" style="font-size: 0.72rem;">${I18n.t('bonusAdded')}</span>
+                </div>
+                <div style="margin-bottom: 0.85rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                        <span style="color: var(--text-secondary); font-size: 0.88rem;">${I18n.t('finalAverage')}:</span>
+                        <strong style="color: var(--color-primary); font-size: 1.25rem;">${results.average.toFixed(2)}/20</strong>
                     </div>
+                    ${results.calculatedAverage ? `
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.35rem;">
+                        <span>${I18n.t('calculatedAverage')}:</span>
+                        <span>${results.calculatedAverage.toFixed(2)}</span>
+                    </div>` : ''}
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${(results.average / 20) * 100}%"></div>
+                        <div class="progress-fill" style="width: ${Math.min(100, (results.average / 20) * 100)}%; background: ${GradeCalculator.getGradeColor(results.average)};"></div>
                     </div>
                 </div>
-                <div style="font-size: 0.875rem; color: var(--text-light);">
-                    <div style="margin-bottom: 0.5rem;">
-                        <strong>Subjects:</strong> ${Object.keys(results.results).length}
+                <div style="font-size: 0.82rem; color: var(--text-secondary);">
+                    <div style="margin-bottom: 0.3rem;">
+                        <strong>${I18n.t('evaluatedSubjects')}:</strong> ${Object.keys(results.results || {}).length}
                     </div>
                     <div>
-                        <strong>Total Coefficient:</strong> ${results.totalCoef}
+                        <strong>${I18n.t('totalCoef')}:</strong> ${results.totalCoef || '-'}
                     </div>
                 </div>
         `;
 
         // Show top subjects
         if (results.results && Object.values(results.results).length > 0) {
-            const sorted = Object.values(results.results)
-                .sort((a, b) => b.average - a.average)
-                .slice(0, 3);
+            const sorted = Object.entries(results.results)
+                .sort((a, b) => {
+                    const gradeA = a[1].average !== undefined ? a[1].average : (a[1].grade || 0);
+                    const gradeB = b[1].average !== undefined ? b[1].average : (b[1].grade || 0);
+                    return gradeB - gradeA;
+                })
+                .slice(0, 4);
 
-            html += '<div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">';
-            html += '<div style="font-size: 0.75rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Top Subjects</div>';
+            html += '<div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color);">';
 
-            sorted.forEach((subject, idx) => {
-                const color = GradeCalculator.getGradeColor(subject.average);
+            sorted.forEach(([key, subject], idx) => {
+                const grade = subject.average !== undefined ? subject.average : subject.grade;
+                const color = GradeCalculator.getGradeColor(grade);
+                const subName = I18n.getSubjectName(key, subject.name || key);
                 html += `
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.875rem;">
-                        <span>${idx + 1}. ${subject.name || 'Subject'}</span>
-                        <span style="color: ${color}; font-weight: 600;">${subject.average.toFixed(2)}</span>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; font-size: 0.82rem;">
+                        <span style="color: var(--text-primary); font-weight: 500;">${idx + 1}. ${subName}</span>
+                        <span style="color: ${color}; font-weight: 700;">${parseFloat(grade).toFixed(2)}</span>
                     </div>
                 `;
             });
@@ -176,39 +199,36 @@ class Page4 {
         const exportBtn = document.getElementById('export-pdf-btn');
         const resetAllBtn = document.getElementById('reset-all');
 
-        // Remove and re-add listeners
         if (exportBtn) {
-            const newExportBtn = exportBtn.cloneNode(true);
-            exportBtn.parentNode.replaceChild(newExportBtn, exportBtn);
-            const freshExportBtn = document.getElementById('export-pdf-btn');
-            freshExportBtn.addEventListener('click', (e) => {
+            exportBtn.onclick = (e) => {
                 e.preventDefault();
                 const allResults = storage.getAllResults();
-                if (Object.values(allResults).every(r => !r)) {
-                    UIUtils.showToast('لا توجد بيانات للتصدير', 'warning');
+                const hasAny = Object.values(allResults).some(r => r && r.average);
+                if (!hasAny) {
+                    UIUtils.showToast(I18n.t('dashNoData'), 'warning');
                     return;
                 }
-                PDFExporter.generatePDF();
-            });
+                if (typeof PDFExporter !== 'undefined' && PDFExporter.generatePDF) {
+                    PDFExporter.generatePDF();
+                }
+            };
         }
 
         if (resetAllBtn) {
-            const newResetAllBtn = resetAllBtn.cloneNode(true);
-            resetAllBtn.parentNode.replaceChild(newResetAllBtn, resetAllBtn);
-            const freshResetAllBtn = document.getElementById('reset-all');
-            freshResetAllBtn.addEventListener('click', (e) => {
+            resetAllBtn.onclick = (e) => {
                 e.preventDefault();
-                if (confirm('⚠️ سيؤدي هذا إلى حذف جميع البيانات ولا يمكن التراجع عنه! هل أنت متأكد؟')) {
-                    if (confirm('تأكيد نهائي: انقر على موافق لحذف جميع البيانات بشكل دائم.')) {
-                        storage.resetAll();
-                        Page1.init();
-                        Page2.init();
-                        Page3.init();
-                        this.renderDashboard();
-                        UIUtils.showToast('تم حذف جميع البيانات', 'success');
+                if (confirm(I18n.t('confirmResetAll'))) {
+                    storage.resetAll();
+                    if (typeof YearCalculatorManager !== 'undefined') {
+                        YearCalculatorManager.initAll();
                     }
+                    if (typeof Page3 !== 'undefined') {
+                        Page3.init();
+                    }
+                    this.renderDashboard();
+                    UIUtils.showToast(I18n.t('toastAllResetSuccess'), 'success');
                 }
-            });
+            };
         }
     }
 
@@ -217,8 +237,3 @@ class Page4 {
         this.attachEventListeners();
     }
 }
-
-// Initialize Page 4 when DOM is ready
-//document.addEventListener('DOMContentLoaded', () => {
-//    setTimeout(() => Page4.init(), 100);
-//});

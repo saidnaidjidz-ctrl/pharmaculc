@@ -1,50 +1,84 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PharmCalc - Pharmacy Grade Calculator</title>
+    <title>PharmaCalc - حساب معدل الصيدلة (السنوات 1 إلى 5)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/styles.css">
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#6366f1">
-    <meta name="description" content="PharmCalc - Pharmacy Grade Calculator for students">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%236366f1' width='192' height='192'/><text x='50%' y='50%' font-size='80' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='middle'>💊</text></svg>">
+    <meta name="theme-color" content="#5D42C9">
+    <meta name="description" content="PharmaCalc - حساب معدل طلاب الصيدلة في الجزائر للسنوات 1 إلى 5 مع احتساب الأعمال التطبيقية وإضافة +0.05">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%235D42C9' width='192' height='192'/><text x='50%' y='50%' font-size='80' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='middle'>💊</text></svg>">
 </head>
 <body>
     <div id="app">
         <!-- Navigation Bar -->
         <nav class="navbar">
             <div class="nav-container">
-                <div class="nav-brand">
-                    <i class="fas fa-flask-vial"></i>
-                    <span>PharmCalc</span>
+                <!-- Branding: PharmaCalc text without icon -->
+                <div class="nav-brand" onclick="App.showPage('page2')">
+                    <span>PharmaCalc</span>
                 </div>
                 
-                <div class="nav-menu">
-                    <button class="nav-link" data-page="page2" title="1st Year Pharmacy Calculator">
-                        <i class="fas fa-list-check"></i>
-                        <span class="nav-label">1st Year</span>
+                <div class="nav-menu-wrapper" id="navMenuWrapper">
+                    <button class="nav-scroll-btn nav-scroll-prev" id="navScrollPrev" title="Scroll" aria-label="Scroll navigation">
+                        <i class="fas fa-chevron-right"></i>
                     </button>
-                    <button class="nav-link" data-page="page3" title="Custom Calculator">
-                        <i class="fas fa-wand-magic-sparkles"></i>
-                        <span class="nav-label">Custom</span>
-                    </button>
-                    <button class="nav-link" data-page="page4" title="Dashboard">
-                        <i class="fas fa-chart-line"></i>
-                        <span class="nav-label">Dashboard</span>
+                    <div class="nav-menu" id="navMenu">
+                        <button class="nav-link active" data-page="page2" data-i18n-title="navYear1" title="1ère Année Pharmacie">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span class="nav-label" data-i18n="navYear1">1ère Année</span>
+                        </button>
+                        <button class="nav-link" data-page="year2-page" data-i18n-title="navYear2" title="2ème Année Pharmacie">
+                            <i class="fas fa-flask-vial"></i>
+                            <span class="nav-label" data-i18n="navYear2">2ème Année</span>
+                        </button>
+                        <button class="nav-link" data-page="year3-page" data-i18n-title="navYear3" title="3ème Année Pharmacie">
+                            <i class="fas fa-pills"></i>
+                            <span class="nav-label" data-i18n="navYear3">3ème Année</span>
+                        </button>
+                        <button class="nav-link" data-page="year4-page" data-i18n-title="navYear4" title="4ème Année Pharmacie">
+                            <i class="fas fa-microscope"></i>
+                            <span class="nav-label" data-i18n="navYear4">4ème Année</span>
+                        </button>
+                        <button class="nav-link" data-page="year5-page" data-i18n-title="navYear5" title="5ème Année Pharmacie">
+                            <i class="fas fa-user-doctor"></i>
+                            <span class="nav-label" data-i18n="navYear5">5ème Année</span>
+                        </button>
+                        <button class="nav-link" data-page="page3" data-i18n-title="navCustom" title="Custom Calculator">
+                            <i class="fas fa-wand-magic-sparkles"></i>
+                            <span class="nav-label" data-i18n="navCustom">حساب مخصص</span>
+                        </button>
+                        <button class="nav-link" data-page="page4" data-i18n-title="navDashboard" title="Dashboard">
+                            <i class="fas fa-chart-line"></i>
+                            <span class="nav-label" data-i18n="navDashboard">لوحة التحكم</span>
+                        </button>
+                    </div>
+                    <button class="nav-scroll-btn nav-scroll-next" id="navScrollNext" title="Scroll" aria-label="Scroll navigation">
+                        <i class="fas fa-chevron-left"></i>
                     </button>
                 </div>
 
                 <div class="nav-controls">
-                    <button class="btn-icon" id="darkModeBtn" title="Toggle Dark Mode">
+                    <!-- Language Switcher -->
+                    <div class="lang-switcher" title="Language / Langue / اللغة">
+                        <button class="lang-btn active" data-lang="ar">🇩🇿 AR</button>
+                        <button class="lang-btn" data-lang="fr">🇫🇷 FR</button>
+                        <button class="lang-btn" data-lang="en">🇬🇧 EN</button>
+                    </div>
+
+                    <!-- Dark Mode Toggle -->
+                    <button class="btn-icon" id="darkModeBtn" data-i18n-title="navDarkMode" title="الوضع الليلي">
                         <i class="fas fa-moon"></i>
                     </button>
-                    <button class="btn-icon" id="helpBtn" title="Help">
+
+                    <!-- Help Guide Button -->
+                    <button class="btn-icon" id="helpBtn" data-i18n-title="navHelp" title="دليل الاستخدام">
                         <i class="fas fa-circle-question"></i>
                     </button>
                 </div>
@@ -53,57 +87,139 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Page 2: 1st Year Pharmacy Calculator -->
+            <!-- 1ère Année Pharmacy Calculator -->
             <section id="page2" class="page active">
                 <div class="page-header">
-                    <h1><i class="fas fa-graduation-cap"></i> 1st Year Pharmacy Calculator</h1>
-                    <p>Calculate grades with detailed breakdown by exams, tests, and practical work</p>
+                    <h1><i class="fas fa-graduation-cap"></i> <span data-i18n="titleYear1">1ère Année Pharmacie</span></h1>
                 </div>
 
                 <div class="calculator-container">
-                    <div id="page2-form" class="form-grid">
-                        <!-- Form will be generated by JavaScript -->
-                    </div>
+                    <div id="year1-form" class="form-grid"></div>
 
                     <div class="button-group">
-                        <button id="calculate-page2" class="btn btn-primary">
-                            <i class="fas fa-calculator"></i> Calculate
+                        <button id="calculate-year1" class="btn btn-primary">
+                            <i class="fas fa-calculator"></i> <span data-i18n="btnCalculate">حساب المعدل</span>
                         </button>
-                        <button id="reset-page2" class="btn btn-secondary">
-                            <i class="fas fa-redo"></i> Reset
+                        <button id="reset-year1" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i> <span data-i18n="btnReset">إعادة تعيين</span>
                         </button>
                     </div>
 
-                    <div id="page2-results" class="results-section" style="display: none;">
-                        <!-- Results will be displayed here -->
+                    <div id="year1-results" class="results-section" style="display: none;"></div>
+                </div>
+            </section>
+
+            <!-- 2ème Année Pharmacy Calculator -->
+            <section id="year2-page" class="page">
+                <div class="page-header">
+                    <h1><i class="fas fa-flask-vial"></i> <span data-i18n="titleYear2">2ème Année Pharmacie</span></h1>
+                </div>
+
+                <div class="calculator-container">
+                    <div id="year2-form" class="form-grid"></div>
+
+                    <div class="button-group">
+                        <button id="calculate-year2" class="btn btn-primary">
+                            <i class="fas fa-calculator"></i> <span data-i18n="btnCalculate">حساب المعدل</span>
+                        </button>
+                        <button id="reset-year2" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i> <span data-i18n="btnReset">إعادة تعيين</span>
+                        </button>
                     </div>
+
+                    <div id="year2-results" class="results-section" style="display: none;"></div>
+                </div>
+            </section>
+
+            <!-- 3ème Année Pharmacy Calculator -->
+            <section id="year3-page" class="page">
+                <div class="page-header">
+                    <h1><i class="fas fa-pills"></i> <span data-i18n="titleYear3">3ème Année Pharmacie</span></h1>
+                </div>
+
+                <div class="calculator-container">
+                    <div id="year3-form" class="form-grid"></div>
+
+                    <div class="button-group">
+                        <button id="calculate-year3" class="btn btn-primary">
+                            <i class="fas fa-calculator"></i> <span data-i18n="btnCalculate">حساب المعدل</span>
+                        </button>
+                        <button id="reset-year3" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i> <span data-i18n="btnReset">إعادة تعيين</span>
+                        </button>
+                    </div>
+
+                    <div id="year3-results" class="results-section" style="display: none;"></div>
+                </div>
+            </section>
+
+            <!-- 4ème Année Pharmacy Calculator -->
+            <section id="year4-page" class="page">
+                <div class="page-header">
+                    <h1><i class="fas fa-microscope"></i> <span data-i18n="titleYear4">4ème Année Pharmacie</span></h1>
+                </div>
+
+                <div class="calculator-container">
+                    <div id="year4-form" class="form-grid"></div>
+
+                    <div class="button-group">
+                        <button id="calculate-year4" class="btn btn-primary">
+                            <i class="fas fa-calculator"></i> <span data-i18n="btnCalculate">حساب المعدل</span>
+                        </button>
+                        <button id="reset-year4" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i> <span data-i18n="btnReset">إعادة تعيين</span>
+                        </button>
+                    </div>
+
+                    <div id="year4-results" class="results-section" style="display: none;"></div>
+                </div>
+            </section>
+
+            <!-- 5ème Année Pharmacy Calculator -->
+            <section id="year5-page" class="page">
+                <div class="page-header">
+                    <h1><i class="fas fa-user-doctor"></i> <span data-i18n="titleYear5">5ème Année Pharmacie</span></h1>
+                </div>
+
+                <div class="calculator-container">
+                    <div id="year5-form" class="form-grid"></div>
+
+                    <div class="button-group">
+                        <button id="calculate-year5" class="btn btn-primary">
+                            <i class="fas fa-calculator"></i> <span data-i18n="btnCalculate">حساب المعدل</span>
+                        </button>
+                        <button id="reset-year5" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i> <span data-i18n="btnReset">إعادة تعيين</span>
+                        </button>
+                    </div>
+
+                    <div id="year5-results" class="results-section" style="display: none;"></div>
                 </div>
             </section>
 
             <!-- Page 3: Dynamic Custom Calculator -->
             <section id="page3" class="page">
                 <div class="page-header">
-                    <h1><i class="fas fa-wand-magic-sparkles"></i> Custom Calculator</h1>
-                    <p>Build your own grading system - add, edit, or remove subjects dynamically</p>
+                    <h1><i class="fas fa-wand-magic-sparkles"></i> <span data-i18n="titleCustom">حساب مخصص (Custom Calculator)</span></h1>
                 </div>
 
                 <div class="calculator-container">
-                    <div class="button-group mb-20">
+                    <div class="button-group">
                         <button id="add-subject-btn" class="btn btn-success">
-                            <i class="fas fa-plus"></i> Add Subject
+                            <i class="fas fa-plus"></i> <span data-i18n="btnAddSubject">إضافة مادة جديدة</span>
                         </button>
                         <button id="reset-page3" class="btn btn-secondary">
-                            <i class="fas fa-redo"></i> Reset
+                            <i class="fas fa-redo"></i> <span data-i18n="btnReset">إعادة تعيين</span>
                         </button>
                     </div>
 
-                    <div id="page3-form" class="custom-subjects-container">
-                        <!-- Subjects will be added here dynamically -->
+                    <div id="page3-form" class="form-grid">
+                        <!-- Custom subjects will be rendered here dynamically -->
                     </div>
 
                     <div class="button-group">
                         <button id="calculate-page3" class="btn btn-primary">
-                            <i class="fas fa-calculator"></i> Calculate
+                            <i class="fas fa-calculator"></i> <span data-i18n="btnCalculate">حساب المعدل المخصص</span>
                         </button>
                     </div>
 
@@ -116,8 +232,7 @@
             <!-- Page 4: Global Dashboard -->
             <section id="page4" class="page">
                 <div class="page-header">
-                    <h1><i class="fas fa-chart-line"></i> Global Dashboard</h1>
-                    <p>Overview of all your grades and performance across all calculators</p>
+                    <h1><i class="fas fa-chart-line"></i> <span data-i18n="titleDashboard">لوحة التحكم التراكمية (Dashboard)</span></h1>
                 </div>
 
                 <div class="dashboard-container">
@@ -127,10 +242,10 @@
 
                     <div class="button-group">
                         <button id="export-pdf-btn" class="btn btn-success">
-                            <i class="fas fa-file-pdf"></i> Export as PDF
+                            <i class="fas fa-file-pdf"></i> <span data-i18n="btnExportPdf">تصدير التقرير PDF</span>
                         </button>
                         <button id="reset-all" class="btn btn-danger">
-                            <i class="fas fa-trash"></i> Reset All Data
+                            <i class="fas fa-trash"></i> <span data-i18n="btnResetAll">مسح جميع البيانات</span>
                         </button>
                     </div>
                 </div>
@@ -141,59 +256,59 @@
         <div id="addSubjectModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>Add New Subject</h2>
+                    <h2><i class="fas fa-plus-circle"></i> <span data-i18n="modalAddSubjectTitle">إضافة مادة مخصصة</span></h2>
                     <button class="modal-close">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <div class="form-group">
-                        <label for="subjectName">Subject Name <span class="required">*</span></label>
-                        <input type="text" id="subjectName" placeholder="e.g., Chemistry, Biology" required>
+                    <div class="form-group" style="margin-bottom: var(--spacing-md);">
+                        <label for="subjectName" class="input-label" data-i18n="customNamePlaceholder">اسم المادة</label>
+                        <input type="text" id="subjectName" data-i18n-placeholder="customNamePlaceholder" placeholder="مثال: Toxicology, Pharmacology" required>
                     </div>
-                    <div class="form-row">
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); margin-bottom: var(--spacing-md);">
                         <div class="form-group">
-                            <label for="subjectCoef">Coefficient <span class="required">*</span></label>
+                            <label for="subjectCoef" class="input-label" data-i18n="labelCoef">المعامل</label>
                             <input type="number" id="subjectCoef" min="0.5" step="0.5" value="1" required>
                         </div>
                         <div class="form-group">
-                            <label for="subjectExams">Number of Exams <span class="required">*</span></label>
+                            <label for="subjectExams" class="input-label" data-i18n="labelTest">عدد الاختبارات</label>
                             <input type="number" id="subjectExams" min="1" max="10" value="1" required>
                         </div>
                     </div>
-                    <div class="form-group checkbox">
-                        <input type="checkbox" id="subjectHasTP">
-                        <label for="subjectHasTP">Include TP/TD Grade</label>
+                    <div class="form-group checkbox" style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" id="subjectHasTP" style="width: auto;">
+                        <label for="subjectHasTP" class="input-label" style="margin: 0;" data-i18n="customHasTpCheckbox">تحتوي المادة على أعمال تطبيقية (TP) اختياري</label>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" onclick="closeAddSubjectModal()">Cancel</button>
-                    <button class="btn btn-primary" onclick="confirmAddSubject()">Add Subject</button>
+                    <button class="btn btn-secondary" onclick="closeAddSubjectModal()" data-i18n="btnCancel">إلغاء</button>
+                    <button class="btn btn-primary" onclick="confirmAddSubject()" data-i18n="btnSave">إضافة المادة</button>
                 </div>
             </div>
         </div>
 
-        <!-- Help Modal -->
+        <!-- Help Guide Modal -->
         <div id="helpModal" class="modal">
-            <div class="modal-content large">
+            <div class="modal-content">
                 <div class="modal-header">
-                    <h2>How to Use PharmCalc</h2>
+                    <h2><i class="fas fa-circle-question"></i> <span data-i18n="modalHelpTitle">دليل استخدام PharmaCalc</span></h2>
                     <button class="modal-close">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="help-section">
-                        <h3><i class="fas fa-graduation-cap"></i> 1st Year Pharmacy Calculator</h3>
-                        <p>Calculate your grades for 1st year pharmacy subjects with multiple exams, tests, and practical work. For subjects with TP, the average is calculated as: (4 × theoretical grade + TP grade) / 5.</p>
+                        <h3 data-i18n="helpP1Title">1. إدخال العلامات</h3>
+                        <p data-i18n="helpP1Text">أدخل علامات الاختبارات والامتحانات لكل مادة (بين 0 و 20). يتم الحفظ تلقائياً.</p>
                     </div>
                     <div class="help-section">
-                        <h3><i class="fas fa-wand-magic-sparkles"></i> Custom Calculator</h3>
-                        <p>Create your own grading system. Add subjects, set coefficients, choose number of exams, and optionally include TP/TD grades.</p>
+                        <h3 data-i18n="helpP2Title">2. الأعمال التطبيقية (TP)</h3>
+                        <p data-i18n="helpP2Text">علامة TP اختيارية. إذا تم إدخالها تُطبق المعادلة المعتمدة: (4 × معدل الاختبارات + TP) ÷ 5. إذا تُركت فارغة يُحسب معدل الاختبارات مباشرة دون أي خصم.</p>
                     </div>
                     <div class="help-section">
-                        <h3><i class="fas fa-chart-line"></i> Dashboard</h3>
-                        <p>View overall performance across all calculators. Track your cumulative averages and subject performance with visual indicators.</p>
+                        <h3 data-i18n="helpP3Title">3. إضافة +0.05 Bonus</h3>
+                        <p data-i18n="helpP3Text">تُضاف 0.05 نقطة مرة واحدة فقط إلى المعدل العام النهائي المحسوب.</p>
                     </div>
                     <div class="help-section">
-                        <h3><i class="fas fa-floppy-disk"></i> Save & Export</h3>
-                        <p>Your data is automatically saved to your browser. Export results as PDF from the Dashboard.</p>
+                        <h3 data-i18n="helpP4Title">4. لوحة التحكم والـ PDF</h3>
+                        <p data-i18n="helpP4Text">تُظهر لوحة التحكم معدلك التراكمي وإحصائيات سنواتك مع إمكانية تصدير التقرير كملف PDF.</p>
                     </div>
                 </div>
             </div>
@@ -202,25 +317,18 @@
         <!-- Notification Toast -->
         <div id="notificationToast" class="toast"></div>
 
-        <!-- Footer -->
+        <!-- App Footer -->
         <footer class="app-footer">
             <div class="footer-content">
                 <div class="footer-main">
                     <div class="footer-section">
                         <p class="footer-text">
-                            <i class="fas fa-heart"></i>
-                            تم إنشاء هذا التطبيق بواسطة <span class="footer-name">Dr. Said</span>
-                        </p>
-                        <p class="footer-dua">
-                            <i class="fas fa-hands-praying"></i>
-                            ادعولي وللأهلي في ظهر الغيب
+                            <span data-i18n="appName">PharmaCalc</span> — <span data-i18n="footerTagline">مخصص لطلاب الصيدلة بالجزائر</span>
                         </p>
                     </div>
-                    <div class="footer-divider"></div>
                     <div class="footer-section">
                         <p class="footer-credits">
-                            PharmCalc v1.0.0 © 2026<br>
-                            <span class="footer-tagline">لخدمة طلاب الصيدلة</span>
+                            © 2026 PharmaCalc | <span data-i18n="footerRights">جميع الحقوق محفوظة</span>
                         </p>
                     </div>
                 </div>
@@ -228,14 +336,17 @@
         </footer>
     </div>
 
-    <!-- Scripts -->
+    <!-- Scripts in proper dependency order -->
+    <script src="js/years-config.js"></script>
     <script src="js/storage.js"></script>
+    <script src="js/i18n.js"></script>
     <script src="js/calculator.js"></script>
     <script src="js/ui-utils.js"></script>
     <script src="js/pdf-export.js"></script>
-    <script src="js/page2.js"></script>
+    <script src="js/year-calculator.js"></script>
     <script src="js/page3.js"></script>
     <script src="js/page4.js"></script>
+    <script src="js/fixes.js"></script>
     <script src="js/app.js"></script>
     
     <!-- Service Worker Registration -->
@@ -244,13 +355,11 @@
             navigator.serviceWorker.register('service-worker.js')
                 .then(reg => {
                     console.log('✅ Service Worker registered successfully');
-                    console.log('🌐 App is now available offline!');
                 })
                 .catch(err => {
                     console.warn('Service Worker registration failed:', err);
                 });
 
-            // Reload page when service worker changes to get new assets immediately
             let refreshing = false;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
                 if (!refreshing) {
@@ -259,14 +368,6 @@
                 }
             });
         }
-        
-        // Install prompt for PWA
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', e => {
-            e.preventDefault();
-            deferredPrompt = e;
-            // You can show a custom install button here if desired
-        });
     </script>
 </body>
 </html>
