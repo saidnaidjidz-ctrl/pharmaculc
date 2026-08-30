@@ -71,9 +71,9 @@ const YEARS_CONFIG = {
             { 
                 key: 'physiopathologie', 
                 name: 'Physiopathologie', 
-                coef: 1, 
+                coef: 2, 
                 type: 'tests', 
-                count: 1, 
+                count: 2, 
                 hasTP: false 
             },
             { 
@@ -148,8 +148,8 @@ const YEARS_CONFIG = {
                 tpOptional: true 
             },
             { 
-                key: 'nosologie', 
-                name: 'Nosologie', 
+                key: 'pharmacognosie', 
+                name: 'Pharmacognosie', 
                 coef: 2, 
                 type: 'tests', 
                 count: 2, 
@@ -172,7 +172,7 @@ const YEARS_CONFIG = {
         name: '4ème Année Pharmacie',
         shortName: '4ème Année',
         icon: 'fas fa-microscope',
-        description: 'Calcul des notes de la 4ème année de Pharmacie (3 Tests par matière, Coef 2)',
+        description: 'Calcul des notes de la 4ème année de Pharmacie (3 Tests par matière + TP Optionnel)',
         subjects: [
             { 
                 key: 'parasitologie', 
@@ -180,7 +180,8 @@ const YEARS_CONFIG = {
                 coef: 2, 
                 type: 'tests', 
                 count: 3, 
-                hasTP: false 
+                hasTP: true, 
+                tpOptional: true 
             },
             { 
                 key: 'microbiologie', 
@@ -188,7 +189,8 @@ const YEARS_CONFIG = {
                 coef: 2, 
                 type: 'tests', 
                 count: 3, 
-                hasTP: false 
+                hasTP: true, 
+                tpOptional: true 
             },
             { 
                 key: 'biochimie', 
@@ -196,7 +198,8 @@ const YEARS_CONFIG = {
                 coef: 2, 
                 type: 'tests', 
                 count: 3, 
-                hasTP: false 
+                hasTP: true, 
+                tpOptional: true 
             },
             { 
                 key: 'immunologie', 
@@ -212,7 +215,8 @@ const YEARS_CONFIG = {
                 coef: 2, 
                 type: 'tests', 
                 count: 3, 
-                hasTP: false 
+                hasTP: true, 
+                tpOptional: true 
             }
         ]
     },

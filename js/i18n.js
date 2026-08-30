@@ -368,6 +368,7 @@ class I18n {
         galenique: { ar: 'الصيدلة الجالينوسية (Pharmacie Galénique)', fr: 'Pharmacie Galénique', en: 'Pharmaceutics & Galenics' },
         semiologie: { ar: 'علم العلامات والتشخيص (Sémiologie)', fr: 'Sémiologie', en: 'Semiology' },
         nosologie: { ar: 'تصنيف الأمراض (Nosologie)', fr: 'Nosologie', en: 'Nosology' },
+        pharmacognosie: { ar: 'علم العقاقير الطبيعية (Pharmacognosie)', fr: 'Pharmacognosie', en: 'Pharmacognosy' },
 
         // Year 4
         immunologie: { ar: 'علم المناعة (Immunologie)', fr: 'Immunologie', en: 'Immunology' },
